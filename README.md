@@ -41,6 +41,7 @@ Options:
 | Name | Description | Required? |
 |-|-|-|
 | `NODE_ENV` | This must be set to `production` when running in production. | in production |
+| `SESSION_SECRET` | Secret used for sessions. | yes |
 | `BASE_URL` | The public URL of your Lectrn instance. | yes |
 | `PG_CONNECTION_STRING` | The connection string of your PostgreSQL database. | in production |
 | `PORT` | HTTP port of server. | no (default: `8080`)
@@ -48,6 +49,7 @@ Options:
 ### Development Example
 
 ```env
+SESSION_SECRET=whatever
 BASE_URL=http://localhost:13673
 PORT=13673
 ```
@@ -55,9 +57,12 @@ PORT=13673
 ### Production Example
 
 ```env
+SESSION_SECRET=PUT A LONG, RANDOM STRING HERE
 NODE_ENV=production
 BASE_URL=https://lectrn.example.com
 PORT=13673
 ```
+
+(Make sure to replace `PUT A LONG, RANDOM STRING HERE` with an actual long, random string, or else your instance will be easily compromised.)
 
 *You should reverse-proxy to `localhost:13673` and use HTTPS through NGINX or Apache.*

@@ -1,4 +1,5 @@
 module.exports = {
   routing: require('./routing'),
-  middleware: require('./middleware')
+  middleware: require('./middleware'),
+  db: require('./db')
 }

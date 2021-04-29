@@ -10,6 +10,7 @@ require('./models')
 // Initialize Express
 const app = Express()
 app.use(Express.json())
+app.use(Express.urlencoded({ extended: true }))
 app.use((req, res, next) => {
   // This middleware pushes ActivityPub endpoints to a different URL,
   // so that the ActivityPub router can take care of them.
