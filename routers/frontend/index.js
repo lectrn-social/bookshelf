@@ -1,6 +1,7 @@
 const argon2 = require('argon2')
 const Express = require('express')
 const session = require('express-session')
+const objection = require('objection')
 const router = Express.Router()
 
 const helpers = require('../../helpers')
@@ -42,6 +43,43 @@ router.post('/auth/login', csrf, async (req, res) => {
   res.redirect('/')
 })
 
+router.post('/auth/signup', csrf, async (req, res) => {
+  if (typeof req.body.username !== 'string' ||
+      typeof req.body.password !== 'string' ||
+      typeof req.body.name !== 'string') {
+    return res.status(400).send('Bad Request')
+  }
+
+  if (req.body.password.length < 8 || req.body.password.length > 1024) {
+    return res.redirect('/auth?error=400v')
+  }
+
+  let user
+
+  try {
+    user = await models.User.query().insertAndFetch({
+      username: req.body.username,
+      password: await argon2.hash(req.body.password, {
+        type: argon2.argon2id
+      }),
+      name: req.body.name
+    })
+  } catch (err) {
+    if (err instanceof objection.ValidationError) {
+      return res.redirect('/auth?error=400v')
+    } else if (err instanceof objection.UniqueViolationError) {
+      return res.redirect('/auth?error=400u')
+    } else {
+      throw err
+    }
+  }
+
+  const tokenPlaintext = await helpers.db.createToken(user)
+  req.session.token = tokenPlaintext
+  req.session.uid = user.id
+  res.redirect('/')
+})
+
 router.post('/auth/logout', csrf, (req, res) => {
   delete req.session.token
   delete req.session.uid
@@ -51,8 +89,10 @@ router.post('/auth/logout', csrf, (req, res) => {
 
 router.get('/auth', csrf, helpers.middleware.getCurrentUser, (req, res) => {
   const authErrors = {
-    "404u": "User not found.",
-    "401p": "Invalid password."
+    '404u': 'User not found.',
+    '401p': 'Invalid password.',
+    '400v': 'Invalid fields.',
+    '400u': 'That username is taken.'
   }
 
   if (req.user) {
@@ -67,15 +107,26 @@ router.get('/auth', csrf, helpers.middleware.getCurrentUser, (req, res) => {
     <title>Lectrn - Auth</title>
   </head>
   <body>
-    ${req.query.error ? `\
-    <p>
-      Error: ${authErrors[req.query.error] || "Unknown error."}
-    </p>`: ''}
+    ${req.query.error
+    ? `<p>
+      Error: ${authErrors[req.query.error] || 'Unknown error.'}
+    </p>`
+    : ''}
+    <h2>Log in</h2>
     <form action="/auth/login" method="POST">
       <input type="hidden" name="_csrf" value="${req.csrfToken()}">
       <input type="text" name="username" placeholder="Username" required><br>
       <input type="password" name="password" placeholder="Password" required><br>
-      <input type="submit">
+      <input type="submit" value="Log in">
+    </form>
+    <hr>
+    <h2>Sign up</h2>
+    <form action="/auth/signup" method="POST">
+      <input type="hidden" name="_csrf" value="${req.csrfToken()}">
+      <input type="text" name="name" placeholder="Name" minlength="1" maxlength="256 title="Must be at least 1 character, and at most 256 characters." required><br>
+      <input type="text" name="username" placeholder="Username" minlength="1" maxlength="32" pattern="^[a-z0-9_]+$" title="Must be all lowercase. Must be at least 1 characters, and at most 32 characters. Must contain only alphanumerics and underscores (_)." required><br>
+      <input type="password" name="password" placeholder="Password" minlength="8" maxlength="1024" title="Must be at least 8 characters, and at most 1024 characters." required><br>
+      <input type="submit" value="Sign up">
     </form>
   </body>
 </html>\
@@ -91,12 +142,13 @@ router.get('/', helpers.middleware.getCurrentUser, csrf, (req, res) => {
     <title>Lectrn</title>
   </head>
   <body>
-    ${req.user ? `\
-    <form action="/auth/logout" method="POST" class="display: inline;">
+    ${req.user
+    ? `<form action="/auth/logout" method="POST" class="display: inline;">
       Logged in as <a href="/@${req.user.username}"><code>@${req.user.username}</code></a> &bull;
       <input type="hidden" name="_csrf" value="${req.csrfToken()}">
       <input type="submit" value="logout">
-    </form>` : `<a href="/auth">Log in &bull; Sign up</a>`}
+    </form>`
+    : '<a href="/auth">Log in &bull; Sign up</a>'}
     <h1>Hello world!</h1>
     <p>Lectrn is currently heavily under construction. You can take a look at our links, for now.</p>
     <ul>
@@ -111,7 +163,7 @@ router.get('/', helpers.middleware.getCurrentUser, csrf, (req, res) => {
 
 router.get('/@:username', helpers.middleware.getResourceForPath, (req, res) => {
   if (!req.resource) {
-    res.status(404).send('404')
+    return res.status(404).send('404')
   }
 
   // The code below is full of XSS issues.
