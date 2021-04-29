@@ -13,9 +13,9 @@ class User extends Model {
       properties: {
         id: { type: 'integer' },
         username: { type: 'string', minLength: 1, maxLength: 32, pattern: '^[a-z0-9_]$' },
-        password: { type: 'string' },
+        password: { type: 'string' }, // NOTE: This is hashed: plaintext password length will have to be validated by the API endpoint.
         name: { type: 'string', minLength: 1, maxLength: 256 },
-        summary: { type: ['string', 'null'] }
+        summary: { type: ['string', 'null'], minLength: 0, maxLength: 500 }
       }
     }
   }
