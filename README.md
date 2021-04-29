@@ -22,8 +22,8 @@ This is the reference server implementation for the Lectrn social network.
 git clone https://github.com/lectrn/lectrn
 cd lectrn
 npm install
-npm migrate # In development, sqlite3 is used as a database.
-npm seed # Optional, only if you want example content
+npm run migrate # In development, sqlite3 is used as a database.
+npm run seed # Optional, only if you want example content
 # Configure your .env file, see section Configuration
 npm start
 ```
