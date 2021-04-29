@@ -8,7 +8,7 @@ class Token extends Model {
   static get jsonSchema () {
     return {
       type: 'object',
-      required: ['id', 'uid', 'token'],
+      required: ['uid', 'token'],
 
       properties: {
         id: { type: 'integer' },
