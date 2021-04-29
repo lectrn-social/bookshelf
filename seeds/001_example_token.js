@@ -7,8 +7,8 @@ exports.seed = function (knex) {
       // Inserts seed entries
       const argonOpts = { type: argon2.argon2id }
       return knex('tokens').insert([
-        { id: 1, user: 1, token: await argon2.hash('mysecrettoken', argonOpts) },
-        { id: 2, user: 2, token: await argon2.hash('mysecrettoken', argonOpts) }
+        { id: 1, uid: 1, token: await argon2.hash('mysecrettoken', argonOpts) },
+        { id: 2, uid: 2, token: await argon2.hash('mysecrettoken', argonOpts) }
       ])
     })
 }

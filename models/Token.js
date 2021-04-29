@@ -8,11 +8,11 @@ class Token extends Model {
   static get jsonSchema () {
     return {
       type: 'object',
-      required: ['id', 'username', 'password', 'name'],
+      required: ['id', 'uid', 'token'],
 
       properties: {
         id: { type: 'integer' },
-        user: { type: 'integer' },
+        uid: { type: 'integer' },
         app: { type: ['integer', 'null'] }, // NOTE: This is null if it was created by the frontend
         token: { type: 'string' } // NOTE: This is hashed.
       }
@@ -25,7 +25,7 @@ class Token extends Model {
         relation: Model.BelongsToOneRelation,
         modelClass: require('./User'),
         join: {
-          from: 'tokens.user',
+          from: 'tokens.uid',
           to: 'users.id'
         }
       }
