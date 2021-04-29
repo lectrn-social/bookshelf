@@ -22,7 +22,7 @@ async function getCurrentUser (req, res, next) {
     .where('uid', req.session.uid)
     .withGraphFetched('user')
 
-  for (let token of query) {
+  for (const token of query) {
     if (await argon2.verify(token.token, req.session.token, { type: argon2.argon2id })) {
       req.user = token.user
       break
