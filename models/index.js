@@ -1,4 +1,5 @@
 module.exports = {
   User: require('./User'),
-  Token: require('./Token')
+  Token: require('./Token'),
+  Blip: require('./Blip')
 }

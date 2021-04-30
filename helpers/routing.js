@@ -12,13 +12,13 @@ function allowAllCors (res) {
 const models = require('../models')
 
 async function getResourceForPath (path) {
-  if (path.startsWith('/activityPub')) {
-    path = path.slice('/activityPub'.length)
-  }
-
   let matches
 
-  if ((matches = path.match(/^\/@([a-z0-9_]{1,32})(\/)?$/))) {
+  if ((matches = path.match(/^\/@[a-z0-9_]{1,32}\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/))) {
+    return (await models.Blip.query().where('uuid', matches[1]).withGraphFetched('user').limit(1))[0]
+  }
+
+  if ((matches = path.match(/^\/@([a-z0-9_]{1,32})/))) {
     return (await models.User.query().where('username', matches[1]).limit(1))[0]
   }
 
