@@ -8,11 +8,15 @@ function allowAllCors (req, res, next) {
 }
 
 async function getResourceForPath (req, res, next) {
-  req.resource = await routing.getResourceForPath(req.path)
+  req.resource = await routing.getResourceForPath(req.originalUrl)
   next()
 }
 
 async function getCurrentUser (req, res, next) {
+  if (!req.session) {
+    return next()
+  }
+
   if (typeof req.session.uid !== 'number' ||
       typeof req.session.token !== 'string') {
     return next()
@@ -32,8 +36,17 @@ async function getCurrentUser (req, res, next) {
   next()
 }
 
+async function requireAuthorization (req, res, next) {
+  if (!req.user) {
+    res.status(401).send()
+  } else {
+    next()
+  }
+}
+
 module.exports = {
   allowAllCors,
   getResourceForPath,
-  getCurrentUser
+  getCurrentUser,
+  requireAuthorization
 }
