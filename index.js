@@ -2,6 +2,7 @@ require('dotenv').config()
 const Express = require('express')
 const Knex = require('knex')
 const Objection = require('objection')
+const session = require('express-session')
 
 const routers = require('./routers')
 const helpers = require('./helpers')
@@ -11,12 +12,12 @@ require('./models')
 const app = Express()
 app.use(Express.json())
 app.use(Express.urlencoded({ extended: true }))
-app.use((req, res, next) => {
-  // This middleware pushes ActivityPub endpoints to a different URL,
-  // so that the ActivityPub router can take care of them.
-  if (helpers.routing.isActivityPub(req)) req.url = '/activityPub' + req.url
-  next()
-})
+app.use(session({
+  resave: false,
+  saveUninitialized: true,
+  secret: process.env.SESSION_SECRET,
+  maxAge: 30 * 24 * 60 * 60 * 1000 // 1 month
+}))
 app.disable('x-powered-by')
 app.set('trust proxy', 1)
 
@@ -27,8 +28,11 @@ Objection.Model.knex(knex)
 
 // Bind routers
 app.use('/.well-known/webfinger', routers.webfinger)
-app.use('/activityPub', routers.activityPub)
-app.use('/', routers.frontend)
+app.use('/', (req, res, next) => {
+  // This middleware (more of a "splitter") takes care of ActivityPub vs. HTML routing.
+  if (helpers.routing.isActivityPub(req)) return routers.activityPub(req, res, next)
+  else return routers.frontend(req, res, next)
+})
 
 // Start Express
 const port = process.env.PORT || 8080

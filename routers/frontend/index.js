@@ -1,18 +1,11 @@
 const argon2 = require('argon2')
 const Express = require('express')
-const session = require('express-session')
 const objection = require('objection')
 const router = Express.Router()
 
 const helpers = require('../../helpers')
 const models = require('../../models')
 
-router.use(session({
-  resave: false,
-  saveUninitialized: true,
-  secret: process.env.SESSION_SECRET,
-  maxAge: 30 * 24 * 60 * 60 * 1000 // 1 month
-}))
 const csrf = require('csurf')()
 
 router.post('/auth/login', csrf, async (req, res) => {
