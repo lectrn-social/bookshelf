@@ -7,6 +7,7 @@ This is the reference server implementation for the Lectrn social network.
 
 ### Table of Contents
 * [Setup](#setup)
+  * [Prerequisites](#prerequisites)
   * [Development Setup](#development-setup)
   * [Production Setup](#production-setup)
 * [Configuration](#configuration)
@@ -15,6 +16,11 @@ This is the reference server implementation for the Lectrn social network.
 
 ## Setup
 
+### Prerequisites
+
+ * Node.js
+ * PostgreSQL
+
 ### Development Setup
 
 ```bash
@@ -22,7 +28,7 @@ This is the reference server implementation for the Lectrn social network.
 git clone https://github.com/lectrn/lectrn
 cd lectrn
 npm install
-npm run migrate # In development, sqlite3 is used as a database.
+npm run migrate
 npm run seed # Optional, only if you want example content
 # Configure your .env file, see section Configuration
 npm start
@@ -43,7 +49,7 @@ Options:
 | `NODE_ENV` | This must be set to `production` when running in production. | in production |
 | `SESSION_SECRET` | Secret used for sessions. | yes |
 | `BASE_URL` | The public URL of your Lectrn instance. | yes |
-| `PG_CONNECTION_STRING` | The connection string of your PostgreSQL database. | in production |
+| `PG_CONNECTION_STRING` | The connection string of your PostgreSQL database. | yes |
 | `PORT` | HTTP port of server. | no (default: `8080`)
 
 ### Development Example
