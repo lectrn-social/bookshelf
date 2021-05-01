@@ -25,8 +25,16 @@ async function getResourceForPath (path) {
   return false
 }
 
+function isResourceInternal (resource) {
+  const baseURL = new URL(process.env.BASE_URL)
+  const resourceURL = new URL(resource)
+
+  return resourceURL.hostname === baseURL.hostname
+}
+
 module.exports = {
   isActivityPub,
   allowAllCors,
-  getResourceForPath
+  getResourceForPath,
+  isResourceInternal
 }
