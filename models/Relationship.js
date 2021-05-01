@@ -23,7 +23,7 @@ class Relationship extends Model {
         object_url: { type: ['string', 'null'] },
 
         approved: { type: ['boolean', 'null'] },
-        approve_ts: { type: ['string', 'null'] },
+        approve_ts: { type: ['string', 'null'] }
       }
     }
   }
@@ -70,18 +70,18 @@ class Relationship extends Model {
     const base = {
       '@context': 'https://www.w3.org/ns/activitystreams',
       type: this.type,
-      actor: typeof this.actor == "string" ? this.actor : this.actor.activityPub(),
-      object: typeof this.object == "string" ? this.object : this.object.activityPub()
+      actor: typeof this.actor === 'string' ? this.actor : this.actor.activityPub(),
+      object: typeof this.object === 'string' ? this.object : this.object.activityPub()
     }
 
-    if (base.type === "Follow") {
+    if (base.type === 'Follow') {
       const invite = {
         '@context': 'https://www.w3.org/ns/activitystreams',
         type: 'Invite',
         actor: base.actor,
         object: base
       }
-  
+
       if (this.approved) {
         return {
           '@context': 'https://www.w3.org/ns/activitystreams',
@@ -91,7 +91,7 @@ class Relationship extends Model {
         }
       } else {
         return invite
-      } 
+      }
     } else {
       return base
     }

@@ -1,5 +1,4 @@
 const striptags = require('striptags')
-const knex = require('knex')
 const Express = require('express')
 const router = Express.Router()
 
@@ -41,10 +40,10 @@ router.get('/@:username/outbox',
           .orderBy('ts', 'desc')
           .orderBy('id', 'desc')
           .limit(limit).offset(offset)
-        
+
         return res.map(x => x.activityPubActivity())
       },
-      async () => parseInt((await base.clone().count())[0]['count'])
+      async () => parseInt((await base.clone().count())[0].count)
     )(req, res)
   })
 
@@ -103,13 +102,13 @@ router.get('/@:username/followers',
           .orderBy('ts', 'desc')
           .orderBy('id', 'desc')
           .limit(limit).offset(offset)
-        
+
         return res.map(x => {
           const actor = x.actor
           return typeof actor === 'string' ? actor : actor.activityPub()
         })
       },
-      async () => parseInt((await base.clone().count())[0]['count'])
+      async () => parseInt((await base.clone().count())[0].count)
     )(req, res)
   })
 
@@ -131,13 +130,13 @@ router.get('/@:username/following',
           .orderBy('ts', 'desc')
           .orderBy('id', 'desc')
           .limit(limit).offset(offset)
-        
+
         return res.map(x => {
           const actor = x.object
           return typeof actor === 'string' ? actor : actor.activityPub()
         })
       },
-      async () => parseInt((await base.clone().count())[0]['count'])
+      async () => parseInt((await base.clone().count())[0].count)
     )(req, res)
   })
 

@@ -91,7 +91,7 @@ const factory = (function () {
 
 const middleware = (function () {
   async function _collection (type, getItems, getCount, req, res) {
-    //const total = Object.values((await (getCount || query.clone()).count())[0])[0]
+    // const total = Object.values((await (getCount || query.clone()).count())[0])[0]
     const total = await getCount()
     const pageCount = (req.query.count || req.query.limit) ? parseInt(req.query.count || req.query.limit) : 10
 
@@ -140,7 +140,7 @@ const middleware = (function () {
           .clone()
           .select(Model.knex().raw('? as table, id, ts', x._single.table))
       }))
-    
+
     // Do the same thing except count only for getCount
     const count = queries[0]
       .unionAll(queries.slice(1).map(x => {
@@ -148,7 +148,7 @@ const middleware = (function () {
           .count()
       }))
       .count()
-    
+
     return orderedCollection(
       async (limit, offset) => { // getItems
         // Run feld query, order by time, and apply limits and offsets
@@ -157,19 +157,19 @@ const middleware = (function () {
           .limit(limit).offset(offset)
 
         let byTable = Object.entries(
-          snip.reduce((a,x) => { // Group resulting elements by table
+          snip.reduce((a, x) => { // Group resulting elements by table
             if (!a[x.table]) a[x.table] = []
             a[x.table].push(x)
             return a
           }, {})
         ).map(x => {
           const model = tables[x[0]]
-          if (!model) throw new Error("No model for table " + x[0])
+          if (!model) throw new Error('No model for table ' + x[0])
 
           // Get modellized elements
           let q = model.query()
             .whereIn('id', x[1].map(x => x.id))
-          
+
           if (neededRelations[x[0]] !== '[]') { // Apply relations if needed
             q = q.withGraphFetched(neededRelations[x[0]])
           }
@@ -183,13 +183,13 @@ const middleware = (function () {
         }
 
         byTable = Object.fromEntries(byTable)
-        
+
         // Reorder and flatten elements according to feld results
-        const res = snip.map(x => byTable[x.table].find(y => y.id == x.id))
-        
+        const res = snip.map(x => byTable[x.table].find(y => y.id === x.id))
+
         return transform(res)
       },
-      async () => (await count).reduce((a,x) => a+parseInt(x['count']), 0)
+      async () => (await count).reduce((a, x) => a + parseInt(x.count), 0)
     )
   }
 
@@ -235,7 +235,7 @@ const middleware = (function () {
   }
 })()
 
-async function resolvePossibleReference(obj) {
+async function resolvePossibleReference (obj) {
   let target
 
   if (typeof obj === 'string') {
@@ -251,7 +251,6 @@ async function resolvePossibleReference(obj) {
     }
 
     target = await helpers.routing.getResourceForPath(objURL.pathname)
-    
   } else {
     if (!helpers.routing.isResourceInternal(obj.id)) {
       return { err: 406 }
