@@ -13,7 +13,7 @@ class Blip extends Model {
       properties: {
         id: { type: 'integer' },
         uuid: { type: 'string' },
-        ts: { type: 'date-time' },
+        ts: { type: 'string' },
 
         reply_to_id: { type: ['integer', 'null'] },
         uid: { type: 'integer' },
