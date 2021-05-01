@@ -78,7 +78,7 @@ router.post('/@:username/outbox',
             uid: req.user.id,
             content: saneContent
           })
-        
+
         res.setHeader('Location', new URL('/@' + req.user.username + '/' + insert.uuid).href)
         res.status(201).send()
       } else {

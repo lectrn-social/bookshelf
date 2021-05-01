@@ -4,7 +4,7 @@ exports.seed = function (knex) {
   // Deletes ALL existing entries
   return knex('tokens').del()
     .then(async function () {
-      var users = await knex('users').select('*')
+      const users = await knex('users').select('*')
       // Inserts seed entries
       const argonOpts = { type: argon2.argon2id }
       return knex('tokens').insert([

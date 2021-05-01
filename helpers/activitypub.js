@@ -136,7 +136,7 @@ const middleware = (function () {
     if (vals.objectTypes.includes(type) || vals.linkTypes.includes(type)) {
       req.activity = factory.createObj(req.body, actor)
     } else if (vals.activityTypes.includes(type)) {
-      if (req.body.actor != actor) {
+      if (req.body.actor !== actor) {
         return res.status(400).send()
       }
       req.activity = req.body
