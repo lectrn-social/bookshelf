@@ -123,7 +123,6 @@ const middleware = (function () {
   }
 
   const tables = Object.fromEntries(Object.values(models).map(x => [x.tableName, x]))
-  const neededRelations = Object.fromEntries(Object.values(models).map(x => [x.tableName, '[' + Object.keys(x.relationMappings || {}).join(' ') + ']']))
 
   /**
    * Creates an OrderedCollection from multiple queries of different types.
@@ -170,8 +169,8 @@ const middleware = (function () {
           let q = model.query()
             .whereIn('id', x[1].map(x => x.id))
 
-          if (neededRelations[x[0]] !== '[]') { // Apply relations if needed
-            q = q.withGraphFetched(neededRelations[x[0]])
+          if (model.requiredGraph) { // Apply relations if needed
+            q = q.withGraphFetched(model.requiredGraph)
           }
 
           return [x[0], q] // Return modellized elements grouped by table
@@ -209,12 +208,12 @@ const middleware = (function () {
     }
 
     const type = req.body.type
-    const actor = new URL('/@' + req.user.username, process.env.BASE_URL).href
+    const actor = req.user.activityPub()
 
     if (vals.objectTypes.includes(type) || vals.linkTypes.includes(type)) {
       req.activity = factory.createObj(req.body, actor)
     } else if (vals.activityTypes.includes(type)) {
-      if (req.body.actor !== actor) {
+      if (req.body.actor.id !== actor.id && req.body.actor !== actor.id) {
         return res.status(400).send()
       }
       req.activity = req.body
@@ -235,40 +234,78 @@ const middleware = (function () {
   }
 })()
 
-async function resolvePossibleReference (obj) {
-  let target
+/**
+ * Resolve URL/Object references to other resources.
+ * This is a shallow operation.
+ * NOTE: This function does not perform any permission checks.
+ * @param {object} obj Object to resolve children of
+ * @param {string[]} [keys] Keys to resolve. Defaults to all (string) keys.
+ * @returns {object} Object with unresolved & resolved children.
+ */
+async function followReferences (obj, keys) {
+  const promises = Object.entries(obj)
+    .map(async ([k, v]) => {
+      if (typeof k !== 'string') return [k, v]
+      if (keys && !keys.includes(k)) return [k, v]
+      // TODO: Filter keys the other way around: Only resolve properties that are valid as links.
+      if (!keys && ['_resolver', '@context'].includes(k)) return [k, v]
 
-  if (typeof obj === 'string') {
-    let objURL
-    try {
-      objURL = new URL(obj)
-    } catch (e) {
-      return { err: 400 }
+      let url
+
+      if (typeof v === 'string') {
+        try {
+          url = new URL(v)
+        } catch (e) {
+          return [k, v]
+        }
+      } else if (typeof v === 'object' && typeof v.id === 'string') {
+        url = new URL(v.id)
+      } else {
+        return [k, v]
+      }
+
+      if (!helpers.routing.isResourceInternal(url.href)) {
+        throw { err: { status: 406, msg: 'Federation Not Implemented' } } // eslint-disable-line no-throw-literal
+      }
+
+      const model = await helpers.routing.getResourceForPath(url.pathname)
+
+      if (!model) {
+        throw { err: { status: 400, msg: 'Could not resolve URL "' + url.href + '"' } } // eslint-disable-line no-throw-literal
+      }
+
+      const ref = model.activityPub()
+
+      ref._resolver = {
+        remote: false,
+        model: model
+      }
+
+      return [k, ref]
+    })
+
+  const res = []
+
+  try {
+    for (const p of promises) {
+      res.push(await p)
     }
-
-    if (!helpers.routing.isResourceInternal(obj)) {
-      return { err: 406 }
+  } catch (e) {
+    if (e.err) {
+      return e
+    } else {
+      throw e
     }
-
-    target = await helpers.routing.getResourceForPath(objURL.pathname)
-  } else {
-    if (!helpers.routing.isResourceInternal(obj.id)) {
-      return { err: 406 }
-    }
-
-    target = await helpers.routing.getResourceForPath(new URL(obj.id).pathname)
   }
 
-  if (!target) {
-    return { err: 404 }
+  return {
+    obj: Object.fromEntries(res)
   }
-
-  return { obj: target }
 }
 
 module.exports = {
   middleware,
   factory,
   vals,
-  resolvePossibleReference
+  followReferences
 }

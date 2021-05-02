@@ -157,17 +157,29 @@ router.post('/@:username/outbox',
   },
   apLib.middleware.postHandler,
   async (req, res) => {
-    const act = req.activity
-    const type = act.type
+    const _act = req.activity
+    const type = _act.type
 
     if (type === 'Create') {
-      const obj = act.object
+      const { err, obj: act } = await apLib.followReferences(_act)
+      if (err) {
+        return res.status(err.status).json(err.msg)
+      }
+
+      const { err: err2, obj } = await apLib.followReferences(act.object)
+      if (err2) {
+        return res.status(err2.status).json(err2.msg)
+      }
+
+      if (obj._resolver && obj._resolver.remote) {
+        return res.status(406).json("Creating from remote objects is not allowed")
+      }
 
       if (obj.type === 'Note') {
         const saneContent = striptags(obj.content)
 
-        if (obj.attributedTo !== act.actor) {
-          return res.status(403).send()
+        if (obj.attributedTo.id !== act.actor.id) {
+          return res.status(403).json("Publishing for other people is not allowed")
         }
 
         // TODO: Parse inReplyTo
@@ -177,34 +189,44 @@ router.post('/@:username/outbox',
             uid: req.user.id,
             content: saneContent
           })
+          .withGraphFetched(models.Blip.requiredGraph)
 
-        res.setHeader('Location', new URL('/@' + req.user.username + '/' + insert.uuid).href)
+        res.setHeader('Location', insert.activityPub().id)
         res.status(201).send()
       } else {
         res.status(406).send()
       }
     } else if (type === 'Follow') {
-      const { err, obj } = await apLib.resolvePossibleReference(act.object)
+      const { err, obj: act } = await apLib.followReferences(_act)
       if (err) {
-        return res.status(err).send()
+        return res.status(err.status).json(err.msg)
       }
 
-      if (!(obj instanceof models.User)) {
+      const obj = act.object
+
+      if (!obj._resolver) {
+        return res.status(400).send()
+      }
+
+      if (obj.type !== 'Person') {
         return res.status(406).send()
       }
 
-      if (obj.id === req.user.id) {
+      if (obj.id === req.user.activityPub().id) {
         return res.status(406).send()
       }
 
       await models.Relationship.query().insert({
         type: 'Follow',
 
-        actor_user_id: req.user.id,
-        object_user_id: obj.id,
+        actor_url: req.remoteUser ? req.remoteUser.id : null,
+        actor_user_id: req.user ? req.user.id : null,
 
-        approved: true,
-        approve_ts: new Date().toISOString()
+        object_user_id: !obj._resolver.remote ? obj._resolver.model.id : null,
+        object_url: obj._resolver.remote ? obj.id : null,
+
+        approved: obj.manuallyApprovesFollowers ? null : true,
+        approve_ts: obj.manuallyApprovesFollowers ? null : new Date().toISOString()
       })
 
       res.status(201).send()
