@@ -32,6 +32,10 @@ class Token extends Model {
       // TODO: app
     }
   }
+
+  static get requiredGraph () {
+    return '[' + Object.keys(this.relationMappings()).join(' ') + ']'
+  }
 }
 
 module.exports = Token

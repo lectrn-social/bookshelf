@@ -43,6 +43,10 @@ class Blip extends Model {
     }
   }
 
+  static get requiredGraph () {
+    return 'user'
+  }
+
   // Convert model into ActivityPub Object
   activityPub () {
     const uid = new URL('/@' + this.user.username, process.env.BASE_URL).href
