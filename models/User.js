@@ -24,14 +24,22 @@ class User extends Model {
   activityPub () {
     const id = new URL('/@' + this.username, process.env.BASE_URL).href
     return {
-      '@context': 'https://www.w3.org/ns/activitystreams',
+      '@context': [
+        'https://www.w3.org/ns/activitystreams',
+        {
+          manuallyApprovesFollowers: 'as:manuallyApprovesFollowers'
+        }
+      ],
       id,
       type: 'Person',
       inbox: id + '/inbox',
       outbox: id + '/outbox',
+      followers: id + '/followers',
+      following: id + '/following',
       preferredUsername: this.username,
       name: this.name,
-      summary: this.summary || undefined
+      summary: this.summary || undefined,
+      manuallyApprovesFollowers: false
     }
   }
 
