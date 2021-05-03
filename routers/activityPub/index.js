@@ -263,7 +263,7 @@ router.post('/@:username/outbox',
         await models.Relationship.query()
           .limit(1)
           .where('type', 'Follow')
-          .where(...(req.user ? ['actor_user_id', req.user.id] : ['actor_url', req.remoteUser.id]))
+          .where('actor_user_id', req.user.id)
           .where(...(!obj._resolver.remote ? ['object_user_id', obj._resolver.model.id] : ['object_url', obj.id]))
       ).length > 0
 
@@ -274,8 +274,7 @@ router.post('/@:username/outbox',
       await models.Relationship.query().insert({
         type: 'Follow',
 
-        actor_url: req.remoteUser ? req.remoteUser.id : null,
-        actor_user_id: req.user ? req.user.id : null,
+        actor_user_id: req.user.id,
 
         object_user_id: !obj._resolver.remote ? obj._resolver.model.id : null,
         object_url: obj._resolver.remote ? obj.id : null,
@@ -305,7 +304,7 @@ router.post('/@:username/outbox',
         await models.Relationship.query()
           .limit(1)
           .where('type', 'Like')
-          .where(...(req.user ? ['actor_user_id', req.user.id] : ['actor_url', req.remoteUser.id]))
+          .where('actor_user_id', req.user.id)
           .where(...(!obj._resolver.remote ? ['object_blip_id', obj._resolver.model.id] : ['object_url', obj.id]))
       ).length > 0
 
@@ -316,8 +315,7 @@ router.post('/@:username/outbox',
       await models.Relationship.query().insert({
         type: 'Like',
 
-        actor_url: req.remoteUser ? req.remoteUser.id : null,
-        actor_user_id: req.user ? req.user.id : null,
+        actor_user_id: req.user.id,
 
         object_blip_id: !obj._resolver.remote ? obj._resolver.model.id : null,
         object_url: obj._resolver.remote ? obj.id : null
@@ -344,7 +342,7 @@ router.post('/@:username/outbox',
         await models.Relationship.query()
           .limit(1)
           .where('type', 'Reblip')
-          .where(...(req.user ? ['actor_user_id', req.user.id] : ['actor_url', req.remoteUser.id]))
+          .where('actor_user_id', req.user.id)
           .where(...(!obj._resolver.remote ? ['object_blip_id', obj._resolver.model.id] : ['object_url', obj.id]))
       ).length > 0
 
@@ -355,8 +353,7 @@ router.post('/@:username/outbox',
       await models.Relationship.query().insert({
         type: 'Reblip',
 
-        actor_url: req.remoteUser ? req.remoteUser.id : null,
-        actor_user_id: req.user ? req.user.id : null,
+        actor_user_id: req.user.id,
 
         object_blip_id: !obj._resolver.remote ? obj._resolver.model.id : null,
         object_url: obj._resolver.remote ? obj.id : null
@@ -390,7 +387,7 @@ router.post('/@:username/outbox',
           await models.Relationship.query()
             .limit(1)
             .where('type', 'Like')
-            .where(...(req.user ? ['actor_user_id', req.user.id] : ['actor_url', req.remoteUser.id]))
+            .where('actor_user_id', req.user.id)
             .where(...(!obj._resolver.remote ? ['object_blip_id', obj._resolver.model.id] : ['object_url', obj.id]))
         )[0]
         if (!model) {
@@ -415,7 +412,7 @@ router.post('/@:username/outbox',
           await models.Relationship.query()
             .limit(1)
             .where('type', 'Reblip')
-            .where(...(req.user ? ['actor_user_id', req.user.id] : ['actor_url', req.remoteUser.id]))
+            .where('actor_user_id', req.user.id)
             .where(...(!obj._resolver.remote ? ['object_blip_id', obj._resolver.model.id] : ['object_url', obj.id]))
         )[0]
         if (!model) {
@@ -444,7 +441,7 @@ router.post('/@:username/outbox',
           await models.Relationship.query()
             .limit(1)
             .where('type', 'Follow')
-            .where(...(req.user ? ['actor_user_id', req.user.id] : ['actor_url', req.remoteUser.id]))
+            .where('actor_user_id', req.user.id)
             .where(...(!obj._resolver.remote ? ['object_user_id', obj._resolver.model.id] : ['object_url', obj.id]))
         )[0]
 
