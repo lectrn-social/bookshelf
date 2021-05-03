@@ -245,6 +245,18 @@ router.post('/@:username/outbox',
         return res.status(406).send()
       }
 
+      const existenceCheck = (
+        await models.Relationship.query()
+          .limit(1)
+          .where('type', 'Follow')
+          .where(...(req.user ? ['actor_user_id', req.user.id] : ['actor_url', req.remoteUser.id]))
+          .where(...(!obj._resolver.remote ? ['object_user_id', obj._resolver.model.id] : ['object_url', obj.id]))
+      ).length > 0
+
+      if (existenceCheck) {
+        return res.status(409).send()
+      }
+
       await models.Relationship.query().insert({
         type: 'Follow',
 
@@ -273,6 +285,18 @@ router.post('/@:username/outbox',
 
       if (obj.type !== 'Note') {
         return res.status(406).send()
+      }
+
+      const existenceCheck = (
+        await models.Relationship.query()
+          .limit(1)
+          .where('type', 'Like')
+          .where(...(req.user ? ['actor_user_id', req.user.id] : ['actor_url', req.remoteUser.id]))
+          .where(...(!obj._resolver.remote ? ['object_blip_id', obj._resolver.model.id] : ['object_url', obj.id]))
+      ).length > 0
+
+      if (existenceCheck) {
+        return res.status(409).send()
       }
 
       await models.Relationship.query().insert({
