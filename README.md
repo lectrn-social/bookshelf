@@ -1,4 +1,4 @@
-# lectrn [![Twitter Follow](https://img.shields.io/twitter/follow/lectrn?style=social)](https://twitter.com/lectrn) ![GitHub Repo stars](https://img.shields.io/github/stars/lectrn/lectrn?style=social) 
+# <img src="https://github.com/lectrn/branding/raw/main/icon/png/icon_bg.png" width="22"> lectrn [![Twitter Follow](https://img.shields.io/twitter/follow/lectrn?style=social)](https://twitter.com/lectrn) ![GitHub Repo stars](https://img.shields.io/github/stars/lectrn/lectrn?style=social) 
 A social network for humans.
 
 This is the reference server implementation for the Lectrn social network.
