@@ -34,7 +34,7 @@ class Token extends Model {
   }
 
   static get requiredGraph () {
-    return '[' + Object.entries(this.relationMappings).map(([k,v]) => k + (v.modelClass.requiredGraph ? ('.' + v.modelClass.requiredGraph) : '')).join(' ') + ']'
+    return '[' + Object.entries(this.relationMappings).map(([k, v]) => k + (v.modelClass.requiredGraph ? ('.' + v.modelClass.requiredGraph) : '')).join(' ') + ']'
   }
 }
 
