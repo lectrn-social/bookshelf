@@ -19,8 +19,8 @@ exports.up = function (knex) {
         .onDelete('CASCADE').onUpdate('CASCADE')
       table.text('object_url').index()
 
-      table.boolean('approved').notNullable().defaultsTo(true).index()
-      table.timestamp('approve_ts')
+      table.boolean('approved').defaultsTo(true).index()
+      table.timestamp('approve_ts').defaultsTo(knex.fn.now())
     })
 }
 
