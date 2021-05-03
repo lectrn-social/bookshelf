@@ -347,6 +347,36 @@ router.post('/@:username/outbox',
         await models.Relationship.query().deleteById(model.id)
 
         res.status(201).send()
+      } else if (type === 'Follow') {
+        const obj = act.object
+
+        if (!obj._resolver) {
+          return res.status(400).send()
+        }
+
+        if (obj.type !== 'Person') {
+          return res.status(406).send()
+        }
+
+        if (obj.id === req.user.activityPub().id) {
+          return res.status(406).send()
+        }
+
+        const model = (
+          await models.Relationship.query()
+            .limit(1)
+            .where('type', 'Follow')
+            .where(...(req.user ? ['actor_user_id', req.user.id] : ['actor_url', req.remoteUser.id]))
+            .where(...(!obj._resolver.remote ? ['object_user_id', obj._resolver.model.id] : ['object_url', obj.id]))
+        )[0]
+
+        if (!model) {
+          return res.status(404).send()
+        }
+
+        await models.Relationship.query().deleteById(model.id)
+
+        res.status(201).send()
       }
     } else {
       res.status(406).send()
