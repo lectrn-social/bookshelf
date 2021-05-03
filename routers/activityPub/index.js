@@ -309,22 +309,13 @@ router.post('/@:username/outbox',
           return res.status(406).send()
         }
 
-        let query = models.Relationship.query()
-          .limit(1)
-
-        if (req.user) {
-          query = query.where('actor_user_id', req.user.id)
-        } else if (req.remoteUser) {
-          query = query.where('actor_url', req.remoteUser.id)
-        }
-
-        if (!obj._resolver.remote) {
-          query = query.where('object_blip_id', obj._resolver.model.id)
-        } else {
-          query = query.where('object_url', obj.id)
-        }
-
-        const model = (await query)[0]
+        const model = (
+          await models.Relationship.query()
+            .limit(1)
+            .where('type', 'Like')
+            .where(...(req.user ? ['actor_user_id', req.user.id] : ['actor_url', req.remoteUser.id]))
+            .where(...(!obj._resolver.remote ? ['object_blip_id', obj._resolver.model.id] : ['object_url', obj.id]))
+        )[0]
         if (!model) {
           return res.status(404).send()
         }
