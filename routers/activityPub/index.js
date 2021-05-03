@@ -80,7 +80,23 @@ router.get('/@:username/inbox',
           .from(models.Relationship.tableName)
           .where('type', 'Follow')
           .where('approved', true)
-          .where('object_user_id', req.resource.id)
+          .where('object_user_id', req.resource.id),
+        Model.knex()
+          .from(models.Relationship.tableName)
+          .where('type', 'Reblip')
+          .where('approved', true)
+          .whereIn('actor_user_id', Model.knex()
+            .from(models.Relationship.tableName)
+            .select('object_user_id')
+            .where('type', 'Follow')
+            .where('approved', true)
+            .where('actor_user_id', req.resource.id)
+            .whereNotNull('object_user_id')
+            .union(
+              Model.knex()
+                .select(Model.knex().raw('?', req.resource.id))
+            )
+          )
       ],
       x => x.map(x => x.activityPubActivity())
     )(req, res)
@@ -308,6 +324,45 @@ router.post('/@:username/outbox',
       })
 
       res.status(201).send()
+    } else if (type === 'Announce') {
+      const { err, obj: act } = await apLib.followReferences(_act)
+      if (err) {
+        return res.status(err.status).json(err.msg)
+      }
+
+      const obj = act.object
+
+      if (!obj._resolver) {
+        return res.status(400).send()
+      }
+
+      if (obj.type !== 'Note') {
+        return res.status(406).send()
+      }
+
+      const existenceCheck = (
+        await models.Relationship.query()
+          .limit(1)
+          .where('type', 'Reblip')
+          .where(...(req.user ? ['actor_user_id', req.user.id] : ['actor_url', req.remoteUser.id]))
+          .where(...(!obj._resolver.remote ? ['object_blip_id', obj._resolver.model.id] : ['object_url', obj.id]))
+      ).length > 0
+
+      if (existenceCheck) {
+        return res.status(409).send()
+      }
+
+      await models.Relationship.query().insert({
+        type: 'Reblip',
+
+        actor_url: req.remoteUser ? req.remoteUser.id : null,
+        actor_user_id: req.user ? req.user.id : null,
+
+        object_blip_id: !obj._resolver.remote ? obj._resolver.model.id : null,
+        object_url: obj._resolver.remote ? obj.id : null
+      })
+
+      res.status(201).send()
     } else if (type === 'Undo') {
       const { err, obj: act } = await apLib.followReferences(_act.object)
       if (err) {
@@ -335,6 +390,31 @@ router.post('/@:username/outbox',
           await models.Relationship.query()
             .limit(1)
             .where('type', 'Like')
+            .where(...(req.user ? ['actor_user_id', req.user.id] : ['actor_url', req.remoteUser.id]))
+            .where(...(!obj._resolver.remote ? ['object_blip_id', obj._resolver.model.id] : ['object_url', obj.id]))
+        )[0]
+        if (!model) {
+          return res.status(404).send()
+        }
+
+        await models.Relationship.query().deleteById(model.id)
+
+        res.status(201).send()
+      } else if (type === 'Announce') {
+        const obj = act.object
+
+        if (!obj._resolver) {
+          return res.status(400).send()
+        }
+
+        if (obj.type !== 'Note') {
+          return res.status(406).send()
+        }
+
+        const model = (
+          await models.Relationship.query()
+            .limit(1)
+            .where('type', 'Reblip')
             .where(...(req.user ? ['actor_user_id', req.user.id] : ['actor_url', req.remoteUser.id]))
             .where(...(!obj._resolver.remote ? ['object_blip_id', obj._resolver.model.id] : ['object_url', obj.id]))
         )[0]

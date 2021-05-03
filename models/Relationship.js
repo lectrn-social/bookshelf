@@ -71,9 +71,11 @@ class Relationship extends Model {
 
   // Convert model into ActivityPub Activity
   activityPubActivity () {
+    const typeRemaps = { Reblip: 'Announce' }
+
     const base = {
       '@context': 'https://www.w3.org/ns/activitystreams',
-      type: this.type,
+      type: Object.keys(typeRemaps).includes(this.type) ? typeRemaps[this.type] : this.type,
       actor: typeof this.actor === 'string' ? this.actor : this.actor.activityPub(),
       object: typeof this.object === 'string' ? this.object : this.object.activityPub()
     }
