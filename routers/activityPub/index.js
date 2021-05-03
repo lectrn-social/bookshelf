@@ -141,6 +141,34 @@ router.get('/@:username/following',
     )(req, res)
   })
 
+router.get('/@:username/liked',
+  helpers.middleware.getResourceForPath,
+  (req, res) => {
+    if (!req.resource) {
+      return res.status(404).send()
+    }
+
+    const base = models.Relationship.query()
+      .where('type', 'Like')
+      .where('actor_user_id', req.resource.id)
+
+    return apLib.middleware.orderedCollection(
+      async (limit, offset) => {
+        const res = await base
+          .withGraphFetched('object_blip.' + models.Blip.requiredGraph)
+          .orderBy('ts', 'desc')
+          .orderBy('id', 'desc')
+          .limit(limit).offset(offset)
+
+        return res.map(x => {
+          const object = x.object
+          return typeof object === 'string' ? object : object.activityPub()
+        })
+      },
+      async () => parseInt((await base.clone().count())[0].count)
+    )(req, res)
+  })
+
 router.post('/@:username/outbox',
   helpers.middleware.getResourceForPath,
   helpers.middleware.getCurrentUser,
@@ -231,6 +259,80 @@ router.post('/@:username/outbox',
       })
 
       res.status(201).send()
+    } else if (type === 'Like') {
+      const { err, obj: act } = await apLib.followReferences(_act)
+      if (err) {
+        return res.status(err.status).json(err.msg)
+      }
+
+      const obj = act.object
+
+      if (!obj._resolver) {
+        return res.status(400).send()
+      }
+
+      if (obj.type !== 'Note') {
+        return res.status(406).send()
+      }
+
+      await models.Relationship.query().insert({
+        type: 'Like',
+
+        actor_url: req.remoteUser ? req.remoteUser.id : null,
+        actor_user_id: req.user ? req.user.id : null,
+
+        object_blip_id: !obj._resolver.remote ? obj._resolver.model.id : null,
+        object_url: obj._resolver.remote ? obj.id : null
+      })
+
+      res.status(201).send()
+    } else if (type === 'Undo') {
+      const { err, obj: act } = await apLib.followReferences(_act.object)
+      if (err) {
+        return res.status(err.status).json(err.msg)
+      }
+
+      if (act.actor.id !== req.user.activityPub().id) {
+        return res.status(400).send()
+      }
+
+      const type = act.type
+
+      if (type === 'Like') {
+        const obj = act.object
+
+        if (!obj._resolver) {
+          return res.status(400).send()
+        }
+
+        if (obj.type !== 'Note') {
+          return res.status(406).send()
+        }
+
+        let query = models.Relationship.query()
+          .limit(1)
+
+        if (req.user) {
+          query = query.where('actor_user_id', req.user.id)
+        } else if (req.remoteUser) {
+          query = query.where('actor_url', req.remoteUser.id)
+        }
+
+        if (!obj._resolver.remote) {
+          query = query.where('object_blip_id', obj._resolver.model.id)
+        } else {
+          query = query.where('object_url', obj.id)
+        }
+
+        const model = (await query)[0]
+        if (!model) {
+          return res.status(404).send()
+        }
+
+        await models.Relationship.query().deleteById(model.id)
+
+        res.status(201).send()
+      }
     } else {
       res.status(406).send()
     }
