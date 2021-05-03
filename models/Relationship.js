@@ -58,7 +58,7 @@ class Relationship extends Model {
   }
 
   static get requiredGraph () {
-    return '[' + Object.keys(this.relationMappings()).join(' ') + ']'
+    return '[' + Object.entries(this.relationMappings).map(([k,v]) => k + (v.modelClass.requiredGraph ? ('.' + v.modelClass.requiredGraph) : '')).join(' ') + ']'
   }
 
   get actor () {
