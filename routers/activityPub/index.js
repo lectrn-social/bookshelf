@@ -155,15 +155,12 @@ router.get('/@:username/liked',
     return apLib.middleware.orderedCollection(
       async (limit, offset) => {
         const res = await base
-          .withGraphFetched('object_blip.' + models.Blip.requiredGraph)
+          .withGraphFetched(models.Relationship.requiredGraph)
           .orderBy('ts', 'desc')
           .orderBy('id', 'desc')
           .limit(limit).offset(offset)
 
-        return res.map(x => {
-          const object = x.object
-          return typeof object === 'string' ? object : object.activityPub()
-        })
+        return res.map(x => x.activityPubActivity())
       },
       async () => parseInt((await base.clone().count())[0].count)
     )(req, res)
