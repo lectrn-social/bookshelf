@@ -172,14 +172,14 @@ router.post('/@:username/outbox',
       }
 
       if (obj._resolver && obj._resolver.remote) {
-        return res.status(406).json("Creating from remote objects is not allowed")
+        return res.status(406).json('Creating from remote objects is not allowed')
       }
 
       if (obj.type === 'Note') {
         const saneContent = striptags(obj.content)
 
         if (obj.attributedTo.id !== act.actor.id) {
-          return res.status(403).json("Publishing for other people is not allowed")
+          return res.status(403).json('Publishing for other people is not allowed')
         }
 
         // TODO: Parse inReplyTo
