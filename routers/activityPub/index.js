@@ -77,6 +77,7 @@ router.get('/@:username/inbox',
           ),
         Model.knex()
           .from(models.Relationship.tableName)
+          .where('type', 'Follow')
           .where('approved', true)
           .where('object_user_id', req.resource.id)
       ],
