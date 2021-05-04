@@ -2,7 +2,7 @@
   "name": "lectrn",
   "version": "1.0.0",
   "description": "A social network for humans.",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "test": "standard",
     "seed": "node util/seedwarn.js && knex seed:run",
