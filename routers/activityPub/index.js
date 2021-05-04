@@ -209,21 +209,15 @@ router.post('/@:username/outbox',
         return res.status(err.status).json(err.msg)
       }
 
-      const { err: err2, obj } = await apLib.followReferences(act.object)
-      if (err2) {
-        return res.status(err2.status).json(err2.msg)
+      const { err: verr } = await apLib.verify(req.user, act)
+      if (verr) {
+        return res.status(verr.status).json(verr.msg)
       }
 
-      if (obj._resolver && obj._resolver.remote) {
-        return res.status(406).json('Creating from remote objects is not allowed')
-      }
+      const obj = act.object
 
       if (obj.type === 'Note') {
         const saneContent = striptags(obj.content)
-
-        if (obj.attributedTo.id !== act.actor.id) {
-          return res.status(403).json('Publishing for other people is not allowed')
-        }
 
         // TODO: Parse inReplyTo
 
@@ -245,31 +239,12 @@ router.post('/@:username/outbox',
         return res.status(err.status).json(err.msg)
       }
 
+      const { err: verr } = await apLib.verify(req.user, act)
+      if (verr) {
+        return res.status(verr.status).json(verr.msg)
+      }
+
       const obj = act.object
-
-      if (!obj._resolver) {
-        return res.status(400).send()
-      }
-
-      if (obj.type !== 'Person') {
-        return res.status(406).send()
-      }
-
-      if (obj.id === req.user.activityPub().id) {
-        return res.status(406).send()
-      }
-
-      const existenceCheck = (
-        await models.Relationship.query()
-          .limit(1)
-          .where('type', 'Follow')
-          .where('actor_user_id', req.user.id)
-          .where(...(!obj._resolver.remote ? ['object_user_id', obj._resolver.model.id] : ['object_url', obj.id]))
-      ).length > 0
-
-      if (existenceCheck) {
-        return res.status(409).send()
-      }
 
       await models.Relationship.query().insert({
         type: 'Follow',
@@ -290,27 +265,12 @@ router.post('/@:username/outbox',
         return res.status(err.status).json(err.msg)
       }
 
+      const { err: verr } = await apLib.verify(req.user, act)
+      if (verr) {
+        return res.status(verr.status).json(verr.msg)
+      }
+
       const obj = act.object
-
-      if (!obj._resolver) {
-        return res.status(400).send()
-      }
-
-      if (obj.type !== 'Note') {
-        return res.status(406).send()
-      }
-
-      const existenceCheck = (
-        await models.Relationship.query()
-          .limit(1)
-          .where('type', 'Like')
-          .where('actor_user_id', req.user.id)
-          .where(...(!obj._resolver.remote ? ['object_blip_id', obj._resolver.model.id] : ['object_url', obj.id]))
-      ).length > 0
-
-      if (existenceCheck) {
-        return res.status(409).send()
-      }
 
       await models.Relationship.query().insert({
         type: 'Like',
@@ -328,27 +288,12 @@ router.post('/@:username/outbox',
         return res.status(err.status).json(err.msg)
       }
 
+      const { err: verr } = await apLib.verify(req.user, act)
+      if (verr) {
+        return res.status(verr.status).json(verr.msg)
+      }
+
       const obj = act.object
-
-      if (!obj._resolver) {
-        return res.status(400).send()
-      }
-
-      if (obj.type !== 'Note') {
-        return res.status(406).send()
-      }
-
-      const existenceCheck = (
-        await models.Relationship.query()
-          .limit(1)
-          .where('type', 'Reblip')
-          .where('actor_user_id', req.user.id)
-          .where(...(!obj._resolver.remote ? ['object_blip_id', obj._resolver.model.id] : ['object_url', obj.id]))
-      ).length > 0
-
-      if (existenceCheck) {
-        return res.status(409).send()
-      }
 
       await models.Relationship.query().insert({
         type: 'Reblip',
@@ -370,91 +315,21 @@ router.post('/@:username/outbox',
         return res.status(400).send()
       }
 
+      const { err: verr, model } = await apLib.verify(req.user, act, true)
+      if (verr) {
+        return res.status(verr.status).json(verr.msg)
+      }
+
       const type = act.type
 
-      if (type === 'Like') {
-        const obj = act.object
-
-        if (!obj._resolver) {
-          return res.status(400).send()
-        }
-
-        if (obj.type !== 'Note') {
-          return res.status(406).send()
-        }
-
-        const model = (
-          await models.Relationship.query()
-            .limit(1)
-            .where('type', 'Like')
-            .where('actor_user_id', req.user.id)
-            .where(...(!obj._resolver.remote ? ['object_blip_id', obj._resolver.model.id] : ['object_url', obj.id]))
-        )[0]
-        if (!model) {
-          return res.status(404).send()
-        }
-
+      if (['Like', 'Announce', 'Follow'].includes(type)) {
         await models.Relationship.query().deleteById(model.id)
-
         res.status(201).send()
-      } else if (type === 'Announce') {
-        const obj = act.object
-
-        if (!obj._resolver) {
-          return res.status(400).send()
-        }
-
-        if (obj.type !== 'Note') {
-          return res.status(406).send()
-        }
-
-        const model = (
-          await models.Relationship.query()
-            .limit(1)
-            .where('type', 'Reblip')
-            .where('actor_user_id', req.user.id)
-            .where(...(!obj._resolver.remote ? ['object_blip_id', obj._resolver.model.id] : ['object_url', obj.id]))
-        )[0]
-        if (!model) {
-          return res.status(404).send()
-        }
-
-        await models.Relationship.query().deleteById(model.id)
-
-        res.status(201).send()
-      } else if (type === 'Follow') {
-        const obj = act.object
-
-        if (!obj._resolver) {
-          return res.status(400).send()
-        }
-
-        if (obj.type !== 'Person') {
-          return res.status(406).send()
-        }
-
-        if (obj.id === req.user.activityPub().id) {
-          return res.status(406).send()
-        }
-
-        const model = (
-          await models.Relationship.query()
-            .limit(1)
-            .where('type', 'Follow')
-            .where('actor_user_id', req.user.id)
-            .where(...(!obj._resolver.remote ? ['object_user_id', obj._resolver.model.id] : ['object_url', obj.id]))
-        )[0]
-
-        if (!model) {
-          return res.status(404).send()
-        }
-
-        await models.Relationship.query().deleteById(model.id)
-
-        res.status(201).send()
+      } else {
+        res.status(406).json('Unsupported object type')
       }
     } else {
-      res.status(406).send()
+      res.status(406).json('Unsupported activity type')
     }
   })
 
