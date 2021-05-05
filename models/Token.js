@@ -1,6 +1,7 @@
 const { Model } = require('objection')
+const LectrnModel = require('./LectrnModel')
 
-class Token extends Model {
+class Token extends LectrnModel {
   static get tableName () {
     return 'tokens'
   }
@@ -31,10 +32,6 @@ class Token extends Model {
       }
       // TODO: app
     }
-  }
-
-  static get requiredGraph () {
-    return '[' + Object.entries(this.relationMappings).map(([k, v]) => k + (v.modelClass.requiredGraph ? ('.' + v.modelClass.requiredGraph) : '')).join(' ') + ']'
   }
 }
 

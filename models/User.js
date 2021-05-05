@@ -1,6 +1,7 @@
 const { Model } = require('objection')
+const LectrnModel = require('./LectrnModel')
 
-class User extends Model {
+class User extends LectrnModel {
   static get tableName () {
     return 'users'
   }

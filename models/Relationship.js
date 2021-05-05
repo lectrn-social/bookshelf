@@ -1,6 +1,7 @@
 const { Model } = require('objection')
+const LectrnModel = require('./LectrnModel')
 
-class Relationship extends Model {
+class Relationship extends LectrnModel {
   static get tableName () {
     return 'relationships'
   }
@@ -55,10 +56,6 @@ class Relationship extends Model {
         }
       }
     }
-  }
-
-  static get requiredGraph () {
-    return '[' + Object.entries(this.relationMappings).map(([k, v]) => k + (v.modelClass.requiredGraph ? ('.' + v.modelClass.requiredGraph) : '')).join(' ') + ']'
   }
 
   get actor () {
