@@ -2,8 +2,8 @@ const { Model } = require('objection')
 const models = require('../models')
 const helpers = { routing: require('../helpers/routing') }
 
-function calculateCollectionURLProps (path, pageCount, total) {
-  const url = new URL(path, process.env.BASE_URL)
+function calculateCollectionURLProps (baseUrl, path, pageCount, total) {
+  const url = new URL(path, baseUrl)
 
   if (pageCount !== 10) {
     url.searchParams.set('count', pageCount)
@@ -19,8 +19,8 @@ function calculateCollectionURLProps (path, pageCount, total) {
   }
 }
 
-function calculateCollectionPageURLProps (path, currentPage, req) {
-  const url = new URL(path, process.env.BASE_URL)
+function calculateCollectionPageURLProps (baseUrl, path, currentPage, req) {
+  const url = new URL(path, baseUrl)
 
   if (req) {
     Object.entries(req.query).forEach(x => {
@@ -43,20 +43,20 @@ const vals = {
 }
 
 const factory = (function () {
-  function _collectionPointer (type, path, total, pageCount = 10) {
+  function _collectionPointer (type, baseUrl, path, total, pageCount = 10) {
     return {
       '@context': 'https://www.w3.org/ns/activitystreams',
       type,
       totalItems: total,
-      ...calculateCollectionURLProps(path, pageCount, total) // id, first, last
+      ...calculateCollectionURLProps(baseUrl, path, pageCount, total) // id, first, last
     }
   }
 
-  function _collectionPage (type, path, currentPage, items, req) {
+  function _collectionPage (type, baseUrl, path, currentPage, items, req) {
     return {
       '@context': 'https://www.w3.org/ns/activitystreams',
       type: type,
-      ...calculateCollectionPageURLProps(path, currentPage, req), // id, next, prev, partOf
+      ...calculateCollectionPageURLProps(baseUrl, path, currentPage, req), // id, next, prev, partOf
       orderedItems: items
     }
   }
@@ -90,7 +90,7 @@ const factory = (function () {
 })()
 
 const middleware = (function () {
-  async function _collection (type, getItems, getCount, req, res) {
+  async function _collection (type, baseUrl, getItems, getCount, req, res) {
     // const total = Object.values((await (getCount || query.clone()).count())[0])[0]
     const total = await getCount()
     const pageCount = (req.query.count || req.query.limit) ? parseInt(req.query.count || req.query.limit) : 10
@@ -108,9 +108,9 @@ const middleware = (function () {
 
       const items = await getItems(pageCount, pageCount * currentPage)
 
-      res.json(factory._collectionPage(type + 'Page', req.originalUrl, currentPage, items, req))
+      res.json(factory._collectionPage(type + 'Page', baseUrl, req.originalUrl, currentPage, items, req))
     } else {
-      res.json(factory._collectionPointer(type, req.originalUrl, total, pageCount))
+      res.json(factory._collectionPointer(type, baseUrl, req.originalUrl, total, pageCount))
     }
   }
 
@@ -121,7 +121,7 @@ const middleware = (function () {
    * @param {*} queries Array of Knex queries
    * @param {Function} transform Result transformer function
    */
-  function complexOrderedCollection (queries, transform) {
+  function complexOrderedCollection (baseUrl, queries, transform) {
     // Fold all queries into one 3-column-wide result, by table, ID, and timestamp
     const fold = queries[0]
       .clone()
@@ -140,7 +140,7 @@ const middleware = (function () {
       }))
       .count()
 
-    return _collection('OrderedCollection',
+    return _collection('OrderedCollection', baseUrl,
       async (limit, offset) => { // getItems
         // Run feld query, order by time, and apply limits and offsets
         const snip = await fold
@@ -217,8 +217,8 @@ const middleware = (function () {
   }
 
   return {
-    orderedCollection: (getItems, getCount) => _collection.bind(this, 'OrderedCollection', getItems, getCount),
-    collection: (getItems, getCount) => _collection.bind(this, 'Collection', getItems, getCount),
+    orderedCollection: (baseUrl, getItems, getCount) => _collection.bind(this, 'OrderedCollection', baseUrl, getItems, getCount),
+    collection: (baseUrl, getItems, getCount) => _collection.bind(this, 'Collection', baseUrl, getItems, getCount),
 
     complexOrderedCollection,
 
@@ -234,7 +234,7 @@ const middleware = (function () {
  * @param {string[]} [keys] Keys to resolve. Defaults to all (string) keys.
  * @returns {object} Object with unresolved & resolved children.
  */
-async function followReferences (obj, keys) {
+async function followReferences (baseUrl, obj, keys) {
   const promises = Object.entries(obj)
     .map(async ([k, v]) => {
       if (typeof k !== 'string') return [k, v]
@@ -256,7 +256,7 @@ async function followReferences (obj, keys) {
         return [k, v]
       }
 
-      if (!helpers.routing.isResourceInternal(url.href)) {
+      if (!helpers.routing.isResourceInternal(baseUrl, url.href)) {
         throw { err: { status: 406, msg: 'Federation Not Implemented' } } // eslint-disable-line no-throw-literal
       }
 
@@ -266,7 +266,7 @@ async function followReferences (obj, keys) {
         throw { err: { status: 400, msg: 'Could not resolve URL "' + url.href + '"' } } // eslint-disable-line no-throw-literal
       }
 
-      const ref = model.activityPub()
+      const ref = model.activityPub(baseUrl)
 
       ref._resolver = {
         remote: false,

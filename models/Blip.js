@@ -48,8 +48,8 @@ class Blip extends Model {
   }
 
   // Convert model into ActivityPub Object
-  activityPub () {
-    const uid = new URL('/@' + this.user.username, process.env.BASE_URL).href
+  activityPub (baseUrl) {
+    const uid = new URL('/@' + this.user.username, baseUrl).href
     return {
       '@context': 'https://www.w3.org/ns/activitystreams',
       type: 'Note',
@@ -66,8 +66,8 @@ class Blip extends Model {
   }
 
   // Convert model into ActivityPub Activity
-  activityPubActivity () {
-    const obj = this.activityPub()
+  activityPubActivity (baseUrl) {
+    const obj = this.activityPub(baseUrl)
     return {
       '@context': obj['@context'],
       id: obj.id + '/activity',

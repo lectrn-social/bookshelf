@@ -20,6 +20,7 @@ module.exports = function server (options) {
   }))
   app.disable('x-powered-by')
   app.set('trust proxy', 1)
+  app.set('base url', options.baseUrl)
 
   // Initialize Knex/Objection
   const knexConfig = require('./knexfile')

@@ -21,8 +21,8 @@ class User extends Model {
   }
 
   // Convert model into ActivityPub object
-  activityPub () {
-    const id = new URL('/@' + this.username, process.env.BASE_URL).href
+  activityPub (baseUrl) {
+    const id = new URL('/@' + this.username, baseUrl).href
     return {
       '@context': [
         'https://www.w3.org/ns/activitystreams',
@@ -44,10 +44,10 @@ class User extends Model {
   }
 
   // Conert model into WebFinger object
-  webfinger () {
-    const url = new URL('/@' + this.username, process.env.BASE_URL).href
+  webfinger (baseUrl) {
+    const url = new URL('/@' + this.username, baseUrl).href
     return {
-      subject: 'acct:' + this.username + '@' + new URL(process.env.BASE_URL).hostname,
+      subject: 'acct:' + this.username + '@' + new URL(baseUrl).hostname,
       aliases: [
         url
       ],

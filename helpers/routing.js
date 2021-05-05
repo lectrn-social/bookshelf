@@ -25,8 +25,8 @@ async function getResourceForPath (path) {
   return false
 }
 
-function isResourceInternal (resource) {
-  const baseURL = new URL(process.env.BASE_URL)
+function isResourceInternal (baseUrl, resource) {
+  const baseURL = new URL(baseUrl)
   const resourceURL = new URL(resource)
 
   return resourceURL.hostname === baseURL.hostname

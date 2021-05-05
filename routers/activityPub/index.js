@@ -33,15 +33,15 @@ router.get('/@:username/outbox',
     const base = models.Blip.query()
       .where('uid', req.resource.id)
 
-    return apLib.middleware.orderedCollection(
+    return apLib.middleware.orderedCollection(res.app.get('base url'),
       async (limit, offset) => {
-        const res = await base
+        const models = await base
           .withGraphFetched('user')
           .orderBy('ts', 'desc')
           .orderBy('id', 'desc')
           .limit(limit).offset(offset)
 
-        return res.map(x => x.activityPubActivity())
+        return models.map(x => x.activityPubActivity(res.app.get('base url')))
       },
       async () => parseInt((await base.clone().count())[0].count)
     )(req, res)
@@ -60,7 +60,7 @@ router.get('/@:username/inbox',
       return res.status(403).send()
     }
 
-    return apLib.middleware.complexOrderedCollection(
+    return apLib.middleware.complexOrderedCollection(res.app.get('base url'),
       [
         Model.knex()
           .from(models.Blip.tableName)
@@ -113,7 +113,7 @@ router.get('/@:username/followers',
       .where('type', 'Follow')
       .where('object_user_id', req.resource.id)
 
-    return apLib.middleware.orderedCollection(
+    return apLib.middleware.orderedCollection(res.app.get('base url'),
       async (limit, offset) => {
         const res = await base
           .withGraphFetched('actor_user')
@@ -141,7 +141,7 @@ router.get('/@:username/following',
       .where('type', 'Follow')
       .where('actor_user_id', req.resource.id)
 
-    return apLib.middleware.orderedCollection(
+    return apLib.middleware.orderedCollection(res.app.get('base url'),
       async (limit, offset) => {
         const res = await base
           .withGraphFetched('object_user')
@@ -169,7 +169,7 @@ router.get('/@:username/liked',
       .where('type', 'Like')
       .where('actor_user_id', req.resource.id)
 
-    return apLib.middleware.orderedCollection(
+    return apLib.middleware.orderedCollection(res.app.get('base url'),
       async (limit, offset) => {
         const res = await base
           .withGraphFetched(models.Relationship.requiredGraph)
@@ -204,7 +204,7 @@ router.post('/@:username/outbox',
     const type = _act.type
 
     if (type === 'Create') {
-      const { err, obj: act } = await apLib.followReferences(_act)
+      const { err, obj: act } = await apLib.followReferences(res.app.get('base url'), _act)
       if (err) {
         return res.status(err.status).json(err.msg)
       }
@@ -228,13 +228,13 @@ router.post('/@:username/outbox',
           })
           .withGraphFetched(models.Blip.requiredGraph)
 
-        res.setHeader('Location', insert.activityPub().id)
+        res.setHeader('Location', insert.activityPub(res.app.get('base url')).id)
         res.status(201).send()
       } else {
         res.status(406).send()
       }
     } else if (type === 'Follow') {
-      const { err, obj: act } = await apLib.followReferences(_act)
+      const { err, obj: act } = await apLib.followReferences(res.app.get('base url'), _act)
       if (err) {
         return res.status(err.status).json(err.msg)
       }
@@ -260,7 +260,7 @@ router.post('/@:username/outbox',
 
       res.status(201).send()
     } else if (type === 'Like') {
-      const { err, obj: act } = await apLib.followReferences(_act)
+      const { err, obj: act } = await apLib.followReferences(res.app.get('base url'), _act)
       if (err) {
         return res.status(err.status).json(err.msg)
       }
@@ -283,7 +283,7 @@ router.post('/@:username/outbox',
 
       res.status(201).send()
     } else if (type === 'Announce') {
-      const { err, obj: act } = await apLib.followReferences(_act)
+      const { err, obj: act } = await apLib.followReferences(res.app.get('base url'), _act)
       if (err) {
         return res.status(err.status).json(err.msg)
       }
@@ -306,7 +306,7 @@ router.post('/@:username/outbox',
 
       res.status(201).send()
     } else if (type === 'Undo') {
-      const { err, obj: act } = await apLib.followReferences(_act.object)
+      const { err, obj: act } = await apLib.followReferences(res.app.get('base url'), _act.object)
       if (err) {
         return res.status(err.status).json(err.msg)
       }

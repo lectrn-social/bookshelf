@@ -24,7 +24,7 @@ router.get('/', helpers.middleware.allowAllCors, async (req, res) => {
     const username = tok.slice(0, -1).join('@')
     const hostname = tok.slice(-1)[0]
 
-    const myHostname = new URL(process.env.BASE_URL).hostname
+    const myHostname = new URL(res.app.get('base url')).hostname
     if (hostname !== myHostname) {
       console.log('WebFinger requested for hostname "' + hostname + '", but my hostname is "' + myHostname + '". Is BASE_URL misconfigured?')
       return res.status(400).send()
@@ -38,7 +38,7 @@ router.get('/', helpers.middleware.allowAllCors, async (req, res) => {
 
     const user = userQ[0]
 
-    output = user.webfinger()
+    output = user.webfinger(res.app.get('base url'))
   } else if (url.protocol === 'https:' || url.protocol === 'http:') {
     const resource = await helpers.routing.getResourceForPath(url.pathname)
 
