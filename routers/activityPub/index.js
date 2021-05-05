@@ -171,13 +171,13 @@ router.get('/@:username/liked',
 
     return apLib.middleware.orderedCollection(res.app.get('base url'),
       async (limit, offset) => {
-        const models = await base
+        const rows = await base
           .withGraphFetched(models.Relationship.requiredGraph)
           .orderBy('ts', 'desc')
           .orderBy('id', 'desc')
           .limit(limit).offset(offset)
 
-        return models.map(x => x.activityPubActivity(res.app.get('base url')))
+        return rows.map(x => x.activityPubActivity(res.app.get('base url')))
       },
       async () => parseInt((await base.clone().count())[0].count)
     )(req, res)
