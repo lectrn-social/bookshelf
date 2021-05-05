@@ -22,6 +22,8 @@ function calculateCollectionPageURLProps (baseUrl, path, currentPage, req) {
     Object.entries(req.query).forEach(x => {
       url.searchParams.set(...x)
     })
+  } else {
+    url.searchParams.set('page', currentPage)
   }
 
   return {
