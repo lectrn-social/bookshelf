@@ -1,4 +1,4 @@
-const db = require('../../helpers/db')
+const { db } = require('../../helpers')
 const models = require('../../models')
 const argon2 = require('argon2')
 

@@ -1,4 +1,4 @@
-const routing = require('../../helpers/routing')
+const { routing } = require('../../helpers')
 
 describe('isActivityPub', () => {
   test('Accepts ld+json with profile', () => {

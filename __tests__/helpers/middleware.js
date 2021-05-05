@@ -1,4 +1,4 @@
-const middleware = require('../../helpers/middleware')
+const { middleware } = require('../../helpers')
 
 async function mockMiddleware (funct, req = {}, res = {}) {
   let nextCalls = 0

@@ -1,4 +1,4 @@
-const Blip = require('../../models/Blip')
+const { Blip } = require('../../models')
 
 let blip
 
