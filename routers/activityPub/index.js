@@ -20,7 +20,7 @@ router.get('/@:username',
       return res.status(404).send()
     }
 
-    res.json(req.resource.activityPub())
+    res.json(req.resource.activityPub(res.app.get('base url')))
   })
 
 router.get('/@:username/outbox',
@@ -98,7 +98,7 @@ router.get('/@:username/inbox',
             )
           )
       ],
-      x => x.map(x => x.activityPubActivity())
+      x => x.map(x => x.activityPubActivity(res.app.get('base url')))
     )(req, res)
   })
 
@@ -123,7 +123,7 @@ router.get('/@:username/followers',
 
         return res.map(x => {
           const actor = x.actor
-          return typeof actor === 'string' ? actor : actor.activityPub()
+          return typeof actor === 'string' ? actor : actor.activityPub(res.app.get('base url'))
         })
       },
       async () => parseInt((await base.clone().count())[0].count)
@@ -151,7 +151,7 @@ router.get('/@:username/following',
 
         return res.map(x => {
           const actor = x.object
-          return typeof actor === 'string' ? actor : actor.activityPub()
+          return typeof actor === 'string' ? actor : actor.activityPub(res.app.get('base url'))
         })
       },
       async () => parseInt((await base.clone().count())[0].count)
@@ -171,13 +171,13 @@ router.get('/@:username/liked',
 
     return apLib.middleware.orderedCollection(res.app.get('base url'),
       async (limit, offset) => {
-        const res = await base
+        const models = await base
           .withGraphFetched(models.Relationship.requiredGraph)
           .orderBy('ts', 'desc')
           .orderBy('id', 'desc')
           .limit(limit).offset(offset)
 
-        return res.map(x => x.activityPubActivity())
+        return models.map(x => x.activityPubActivity(res.app.get('base url')))
       },
       async () => parseInt((await base.clone().count())[0].count)
     )(req, res)
@@ -209,7 +209,7 @@ router.post('/@:username/outbox',
         return res.status(err.status).json(err.msg)
       }
 
-      const { err: verr } = await apLib.verify(req.user, act)
+      const { err: verr } = await apLib.verify(res.app.get('base url'), req.user, act)
       if (verr) {
         return res.status(verr.status).json(verr.msg)
       }
@@ -239,7 +239,7 @@ router.post('/@:username/outbox',
         return res.status(err.status).json(err.msg)
       }
 
-      const { err: verr } = await apLib.verify(req.user, act)
+      const { err: verr } = await apLib.verify(res.app.get('base url'), req.user, act)
       if (verr) {
         return res.status(verr.status).json(verr.msg)
       }
@@ -265,7 +265,7 @@ router.post('/@:username/outbox',
         return res.status(err.status).json(err.msg)
       }
 
-      const { err: verr } = await apLib.verify(req.user, act)
+      const { err: verr } = await apLib.verify(res.app.get('base url'), req.user, act)
       if (verr) {
         return res.status(verr.status).json(verr.msg)
       }
@@ -288,7 +288,7 @@ router.post('/@:username/outbox',
         return res.status(err.status).json(err.msg)
       }
 
-      const { err: verr } = await apLib.verify(req.user, act)
+      const { err: verr } = await apLib.verify(res.app.get('base url'), req.user, act)
       if (verr) {
         return res.status(verr.status).json(verr.msg)
       }
@@ -311,11 +311,11 @@ router.post('/@:username/outbox',
         return res.status(err.status).json(err.msg)
       }
 
-      if (act.actor.id !== req.user.activityPub().id) {
+      if (act.actor.id !== req.user.activityPub(res.app.get('base url')).id) {
         return res.status(400).send()
       }
 
-      const { err: verr, model } = await apLib.verify(req.user, act, true)
+      const { err: verr, model } = await apLib.verify(res.app.get('base url'), req.user, act, true)
       if (verr) {
         return res.status(verr.status).json(verr.msg)
       }
@@ -340,7 +340,7 @@ router.get('/@:username/:uuid',
       return res.status(404).send()
     }
 
-    res.json(req.resource.activityPub())
+    res.json(req.resource.activityPub(res.app.get('base url')))
   })
 
 router.get('/@:username/:uuid/activity',
@@ -350,7 +350,7 @@ router.get('/@:username/:uuid/activity',
       return res.status(404).send()
     }
 
-    res.json(req.resource.activityPubActivity())
+    res.json(req.resource.activityPubActivity(res.app.get('base url')))
   })
 
 module.exports = router
