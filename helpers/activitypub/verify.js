@@ -125,7 +125,7 @@ const typeMap = {
 async function verify (baseUrl, actor, obj, undo = false) {
   const fn = typeMap[obj.type]
   if (!fn) throw new Error('No verifier for type ' + obj.type)
-  return (await fn(actor, obj, undo)) || {}
+  return (await fn(baseUrl, actor, obj, undo)) || {}
 }
 
 module.exports = verify
