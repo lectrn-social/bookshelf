@@ -1,4 +1,3 @@
-const { Model } = require('objection')
 const LectrnModel = require('./LectrnModel')
 
 class User extends LectrnModel {
