@@ -29,7 +29,7 @@ function isResourceInternal (baseUrl, resource) {
   const baseURL = new URL(baseUrl)
   const resourceURL = new URL(resource)
 
-  return resourceURL.hostname === baseURL.hostname
+  return resourceURL.host === baseURL.host
 }
 
 module.exports = {
