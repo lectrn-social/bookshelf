@@ -46,5 +46,13 @@
   },
   "standard": {
     "env": [ "jest" ]
+  },
+  "jest": {
+    "collectCoverageFrom": [
+      "*.js",
+      "**/*.js",
+      "!{migrations,seeds,coverage,util,node_modules}/**/*",
+      "!index.js"
+    ]
   }
 }
