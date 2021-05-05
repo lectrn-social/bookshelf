@@ -114,14 +114,6 @@ const middleware = (function () {
     }
   }
 
-  function orderedCollection (getItems, getCount) {
-    return _collection.bind(this, 'OrderedCollection', getItems, getCount)
-  }
-
-  function collection (getItems, getCount) {
-    return _collection.bind(this, 'Collection', getItems, getCount)
-  }
-
   const tables = Object.fromEntries(Object.values(models).map(x => [x.tableName, x]))
 
   /**
@@ -148,7 +140,7 @@ const middleware = (function () {
       }))
       .count()
 
-    return orderedCollection(
+    return _collection('OrderedCollection',
       async (limit, offset) => { // getItems
         // Run feld query, order by time, and apply limits and offsets
         const snip = await fold
@@ -225,8 +217,8 @@ const middleware = (function () {
   }
 
   return {
-    orderedCollection,
-    collection,
+    orderedCollection: (getItems, getCount) => _collection.bind(this, 'OrderedCollection', getItems, getCount),
+    collection: (getItems, getCount) => _collection.bind(this, 'Collection', getItems, getCount),
 
     complexOrderedCollection,
 
