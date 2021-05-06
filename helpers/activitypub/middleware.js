@@ -130,6 +130,7 @@ function postHandler (req, res, next) {
 }
 
 module.exports = {
+  _collection,
   orderedCollection: (baseUrl, getItems, getCount) => _collection.bind(this, 'OrderedCollection', baseUrl, getItems, getCount),
   collection: (baseUrl, getItems, getCount) => _collection.bind(this, 'Collection', baseUrl, getItems, getCount),
 
