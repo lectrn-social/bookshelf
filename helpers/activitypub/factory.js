@@ -44,11 +44,12 @@ function _collectionPointer (type, baseUrl, path, total, pageCount = 10) {
 }
 
 function _collectionPage (type, baseUrl, path, currentPage, items, req) {
+  const itemsKey = type.startsWith('Ordered') ? 'orderedItems' : 'items'
   return {
     '@context': 'https://www.w3.org/ns/activitystreams',
-    type: type,
+    type,
     ...calculateCollectionPageURLProps(baseUrl, path, currentPage, req), // id, next, prev, partOf
-    orderedItems: items
+    [itemsKey]: items
   }
 }
 
