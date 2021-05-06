@@ -74,9 +74,7 @@ function complexOrderedCollection (baseUrl, queries, transform) {
         let q = model.query()
           .whereIn('id', x[1].map(x => x.id))
 
-        if (model.requiredGraph) { // Apply relations if needed
-          q = q.withGraphFetched(model.requiredGraph)
-        }
+        q = q.withGraphFetched(model.requiredGraph)
 
         return [x[0], q] // Return modellized elements grouped by table
       })
