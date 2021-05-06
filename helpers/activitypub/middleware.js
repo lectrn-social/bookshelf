@@ -53,7 +53,7 @@ function complexOrderedCollection (baseUrl, queries, transform) {
     }))
     .count()
 
-  return _collection('OrderedCollection', baseUrl,
+  return _collection.bind(this, 'OrderedCollection', baseUrl,
     async (limit, offset) => { // getItems
       // Run feld query, order by time, and apply limits and offsets
       const snip = await fold
