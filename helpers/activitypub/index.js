@@ -36,7 +36,9 @@ async function followReferences (baseUrl, obj, keys) {
 
       const model = await helpers.routing.getResourceForPath(url.pathname)
 
-      if (!model) {
+      if (model === false) {
+        return [k, v]
+      } else if (!model) {
         throw { err: { status: 400, msg: 'Could not resolve URL "' + url.href + '"' } } // eslint-disable-line no-throw-literal
       }
 
