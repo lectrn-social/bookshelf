@@ -16,7 +16,7 @@ exports.seed = function (knex) {
         { type: 'Like', actor_user_id: users[0].id, object_blip_id: blips[0].id },
         { type: 'Like', actor_user_id: users[1].id, object_blip_id: blips[1].id },
 
-        { type: 'Reblip', actor_user_id: users[0].id, object_blip_id: blips[0] }.id
+        { type: 'Reblip', actor_user_id: users[0].id, object_blip_id: blips[0].id }
       ])
     })
 }
