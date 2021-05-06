@@ -194,7 +194,7 @@ describe('requireAuthorization', () => {
     const res = await mockMiddleware(middleware.requireAuthorization, {})
 
     expect(res.nextCalls).toBe(0)
-    expect(res.status).toBe(401)
+    expect(res.status).not.toBe(200)
   })
 
   test('Succeeds with user', async () => {
