@@ -17,17 +17,17 @@ async function parseUserAs(as, req, res, next) {
             try {
                 new mongoose.Types.ObjectId(req.params[as]);
             } catch (e) {
-                return res.status(400).json({ error: "invalid_userid", error_description: "Invalid userid" });
+                return res.status(400).json({ error: "invalid_request", field: ":user", description: "Invalid userid" });
             }
         }
 
         user = await User.findById(req.params[as]).exec();
     }
 
-    if (!user) return res.status(404).json({ error: "user_not_found", error_description: "User not found" });
+    if (!user) return res.status(404).json({ error: "invalid_request", path: ":user", description: "User not found" });
 
     if (!req.target) req.target = {};
-    req.target.user = user;
+    req.target[as] = user;
 
     next();
 }
@@ -35,12 +35,21 @@ async function parseUserAs(as, req, res, next) {
 const parseUser = parseUserAs.bind({}, "user");
 
 router.use(auth.forceAuth);
+router.use(parseUser);
 
-router.get('/:user', parseUser, auth.forceScope(
-    auth.userScope
-), async (req, res) => {
-    res.status(200).json(req.target.user); // TODO: datafilter
-});
+router.get('/:user',
+    auth.forceScope(auth.userScope),
+    async (req, res) => {
+        res.status(200).json(req.target.user); // TODO: datafilter
+    }
+);
+
+router.patch('/:user',
+    auth.forceScope("me:write"),
+    async (req, res) => {
+        
+    }
+)
 
 module.exports = {
     router,
