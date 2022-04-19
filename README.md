@@ -3,7 +3,7 @@ A social network for humans.
 
 This is the reference server implementation for the Lectrn social network.
 
-**Status: very little is implemented.**
+**Status: Abandoned for new Lectrn.**
 
 ### Table of Contents
 * [Setup](#setup)
