@@ -1,0 +1,194 @@
+<%
+var scopeText = { // TODO: extend
+    profile: "View your profile",
+    offline_access: "Refresh their access to your profile without your knowledge",
+}
+%>
+<html>
+    <head>
+        <title>Sign in with Lectrn</title>
+        <meta charset="utf8" />
+        <script src="https://kit.fontawesome.com/da1205f848.js" crossorigin="anonymous"></script>
+
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+
+            html, body {
+                position: relative;
+                width: 100%;
+                height: 100%;
+            }
+
+            body {
+                color: #333;
+                margin: 0;
+                box-sizing: border-box;
+                font-family: 'Inter', sans-serif;
+                background-color: #FAFAFA;
+            }
+
+            a {
+                color: rgb(0,100,200);
+                text-decoration: none;
+            }
+
+            a:hover {
+                text-decoration: underline;
+            }
+
+            a:visited {
+                color: rgb(0,80,160);
+            }
+
+            label {
+                display: block;
+            }
+
+            input, button, select, textarea {
+                font-family: inherit;
+                font-size: inherit;
+                -webkit-padding: 0.4em 0;
+                padding: 0.4em;
+                margin: 0 0 0.5em 0;
+                box-sizing: border-box;
+                border: 1px solid #ccc;
+                border-radius: 2px;
+            }
+
+            input:disabled {
+                color: #ccc;
+            }
+
+            button {
+                color: #333;
+                background-color: #f4f4f4;
+                outline: none;
+            }
+
+            button:disabled {
+                color: #999;
+            }
+
+            button:not(:disabled):active {
+                background-color: #ddd;
+            }
+
+            button:focus {
+                border-color: #666;
+            }
+
+            nav, footer {
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                padding-left: 1em;
+                padding-right: 1em;
+                width: 100%;
+                height: 2.5em;
+                background-color: white;
+                box-shadow: 0 2px 6px 0 hsla(0, 0%, 0%, 0.2);
+            }
+
+            nav {
+                gap: 1em;
+            }
+
+            nav a, nav a:hover {
+                color: black !important;
+                text-decoration: none;
+            }
+
+            nav button, nav button:active {
+                background-color: transparent !important;
+                outline: none;
+                border: none;
+                padding: 0;
+                margin: 0;
+                cursor: pointer;
+                box-shadow: none !important;
+            }
+
+            footer {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                justify-content: center;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            .centerer {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                height: calc(100% - 5em);
+            }
+
+            .form {
+                display: block;
+                background-color: white;
+                padding: 15px;
+                border-radius: 15px;
+                box-shadow: 0 2px 6px 0 hsla(0, 0%, 0%, 0.2);
+            }
+        </style>
+    </head>
+    <body>
+        <nav>
+            <b>Lectrn</b>
+        </nav>
+        <div class="centerer">
+            <form class="form" id="form" method="post">
+                <% if (app.isOfficial) { %>
+                    <h3 style="margin-top: 0">Sign in with Lectrn</h3>
+                <% } else { %>
+                    <b><%= app.name %> wants to access your account</b>
+                    <p><%= app.description %></p>
+                <% } %>
+
+                <input id="username" name="username" placeholder="Username" autocomplete="username"><br>
+                <input type="password" id="password" name="password" placeholder="Password" autocomplete="current-password"><br><br>
+                <input type="submit" value="Sign in">
+
+                <% if (!app.isOfficial) { %>
+                    <br><br><p><b><%= app.name %></b> will be able to:</p>
+                    <ul style="padding-left: 1em;">
+                        <% for (let scope of scopes) { %>
+                            <li><%= scopeText[scope] %></li>
+                        <% } %>
+                    </ul>
+                <% } %>
+            </form>
+        </div>
+        <footer>
+            <span>made with &lt;3</span>
+        <footer>
+
+        <script crossorigin="anonymous" src="https://gitcdn.xyz/cdn/emn178/js-sha3/master/build/sha3.min.js"></script> <!-- TODO: selfhost -->
+        <script>
+            document.getElementById("form").addEventListener('submit', async function formSubmit(event) {
+                event.preventDefault();
+                let data = Object.fromEntries([...this.elements].filter(x => x.name).map(x => [x.name, x.value]));
+                data.password_sha3 = sha3_512.update(data.password).hex();
+                delete data.password;
+                let req = await fetch(window.location.href, {
+                    method: "POST",
+                    body: JSON.stringify(data),
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    }
+                });
+
+                let res = await req.json();
+
+                if (res.error) alert(res.error_description || res.error)
+                else window.location.href = res.redirect;
+            });
+        </script>
+    </body>
+</html>
