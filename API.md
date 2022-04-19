@@ -1,5 +1,20 @@
 ## Authentication
 
+### Scopes
+NOTE: This is bound to be changed and overhauled.
+
+ * `me` - Read profile
+ * `me:write` - Change profile
+ * `me:private` - Read private items on profile
+ * `blips:write` - Create Blips
+ * `feed:home` - Read home timeline
+ * `feed:home:private` - Read private items on home timeline
+ * `others` - Read other people's profiles
+ * `others:private` - Read private items on other people's profiles
+ * `account:admin` - Change account settings
+ * `account:passsword` - Change password
+ * `offline_access` - Refresh token
+
 ### `/oauth2/authorize`
 Navigate user's browser here to get an authorization code.
 

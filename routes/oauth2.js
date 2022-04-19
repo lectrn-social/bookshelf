@@ -7,7 +7,7 @@ const { App, User, Token } = require('../lib/db');
 const sha3 = require('../lib/sha3');
 const random = require('../lib/random');
 
-const EXISTING_SCOPES = ["profile", "offline_access"]; // TODO: extend
+const EXISTING_SCOPES = ["me", "me:write", "me:private", "blips:write", "feed:home", "feed:home:private", "others", "others:private", "account:admin", "account:password", "offline_access"]; // TODO: extend
 const router = Express.Router();
 
 async function authorizeVerify(req, res) {
