@@ -12,7 +12,6 @@ NOTE: This is bound to be changed and overhauled.
  * `others` - Read other people's profiles
  * `others:private` - Read private items on other people's profiles
  * `account:admin` - Change account settings
- * `account:passsword` - Change password
  * `offline_access` - Refresh token
 
 ### `/oauth2/authorize`
