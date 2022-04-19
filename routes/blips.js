@@ -7,12 +7,10 @@ const auth = require('../lib/auth');
 const router = Express.Router({ mergeParams: true });
 
 async function parseBlip(req, res, next) {
-    if (req.params.blip != "me") {
-        try {
-            new mongoose.Types.ObjectId(req.params.blip);
-        } catch (e) {
-            return res.status(400).json({ error: "invalid_blipid", error_description: "Invalid blipid" });
-        }
+    try {
+        new mongoose.Types.ObjectId(req.params.blip);
+    } catch (e) {
+        return res.status(400).json({ error: "invalid_blipid", error_description: "Invalid blipid" });
     }
 
     let blip = await Blip.findById(req.params.blip).exec();
