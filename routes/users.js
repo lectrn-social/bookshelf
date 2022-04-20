@@ -1,4 +1,5 @@
 const Express = require('express');
+const cors = require('cors');
 const mongoose = require('mongoose');
 const { User } = require('../lib/db');
 const auth = require('../lib/auth');
@@ -6,6 +7,8 @@ const auth = require('../lib/auth');
 const router = Express.Router();
 
 async function parseUserAs(as, req, res, next) {
+    if (req.method == "OPTIONS") return next();
+
     let user;
 
     if (req.params[as].startsWith("@")) {
@@ -34,10 +37,11 @@ async function parseUserAs(as, req, res, next) {
 
 const parseUser = parseUserAs.bind({}, "user");
 
+router.use(cors());
 router.use(auth.forceAuth);
-router.use(parseUser);
 
 router.get('/:user',
+    parseUser,
     auth.forceScope(auth.userScope),
     async (req, res) => {
         res.status(200).json(req.target.user); // TODO: datafilter
@@ -45,6 +49,7 @@ router.get('/:user',
 );
 
 router.patch('/:user',
+    parseUser,
     auth.forceScope("me:write"),
     async (req, res) => {
         

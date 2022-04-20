@@ -1,13 +1,16 @@
 const Express = require('express');
-const { Blip, Post, Follow } = require("../lib/db");
+const cors = require('cors');
+const { Blip, Follow } = require("../lib/db");
 const { parseUser } = require('./users');
 const auth = require('../lib/auth');
 
 const router = Express.Router({ mergeParams: true });
 
+router.use(cors());
 router.use(auth.forceAuth);
 router.use(parseUser);
 
+router.options('/user', cors({ methods: ["GET"] }));
 router.get('/user',
     auth.forceScope(
         auth.userScope,
@@ -42,6 +45,7 @@ router.get('/user',
     }
 );
 
+router.options('/home', cors({ methods: ["GET"] }));
 router.get('/home',
     auth.forceScope(
         "feed:home",
