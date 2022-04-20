@@ -14,7 +14,7 @@ NOTE: This is bound to be changed and overhauled.
  * `account:admin` - Change account settings
  * `offline_access` - Refresh token
 
-### `/oauth2/authorize`
+### `/auth/authorize`
 Navigate user's browser here to get an authorization code.
 
 Query parameters:
@@ -30,14 +30,14 @@ Redirect URI's parameters:
  * `code`: result authorization code
  * `state`: specified state
 
-### POST `/oauth2/token`
+### POST `/auth/token`
 Turns codes into tokens.
 
 Request body:
  * `grant_type`: must be `authorization_code`
  * `code`: authorization code
- * `redirect_uri`: must be the same as specified to `/oauth2/authorize`
- * `client_id`: must be the same as specified to `/oauth2/authorize`
+ * `redirect_uri`: must be the same as specified to `/auth/authorize`
+ * `client_id`: must be the same as specified to `/auth/authorize`
  * `code_verifier`: optional PKCE code verifier
 
 ## User
