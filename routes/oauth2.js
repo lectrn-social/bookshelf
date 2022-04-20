@@ -31,8 +31,6 @@ const authorizeQuery = {
             
             if (!req.target) req.target = {};
             req.target.app = app;
-            
-            console.log(req);
         },
     },
     redirect_uri: {
