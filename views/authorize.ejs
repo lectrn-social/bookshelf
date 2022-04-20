@@ -129,7 +129,9 @@ var scopeText = { // TODO: extend
             }
 
             .form {
-                display: block;
+                display: flex;
+                gap: 1em;
+                justify-content: center;
                 background-color: white;
                 padding: 15px;
                 border-radius: 15px;
@@ -142,27 +144,38 @@ var scopeText = { // TODO: extend
             <b>Lectrn</b>
         </nav>
         <div class="centerer">
-            <form class="form" id="form" method="post">
-                <% if (app.isOfficial) { %>
-                    <h3 style="margin-top: 0">Sign in with Lectrn</h3>
-                <% } else { %>
-                    <b><%= app.name %> wants to access your account</b>
-                    <p><%= app.description %></p>
-                <% } %>
-
-                <input id="username" name="username" placeholder="Username" autocomplete="username"><br>
-                <input type="password" id="password" name="password" placeholder="Password" autocomplete="current-password"><br><br>
-                <input type="submit" value="Sign in">
-
-                <% if (!app.isOfficial) { %>
-                    <br><br><p><b><%= app.name %></b> will be able to:</p>
-                    <ul style="padding-left: 1em;">
-                        <% for (let scope of scopes) { %>
-                            <li><%= scopeText[scope] %></li>
-                        <% } %>
-                    </ul>
-                <% } %>
-            </form>
+            <div class="form">
+                <form id="form" method="post">
+                    <% if (app.isOfficial) { %>
+                        <h3 style="margin-top: 0">Sign in with Lectrn</h3>
+                    <% } else { %>
+                        <b><%= app.name %> wants to access your account</b>
+                        <p><%= app.description %></p>
+                    <% } %>
+    
+                    <input type="hidden" name="type" value="signin">
+                    <input id="username" name="username" placeholder="Username" autocomplete="username"><br>
+                    <input type="password" id="password" name="password" placeholder="Password" autocomplete="current-password"><br><br>
+                    <input type="submit" value="Sign in">
+    
+                    <% if (!app.isOfficial) { %>
+                        <br><br><p><b><%= app.name %></b> will be able to:</p>
+                        <ul style="padding-left: 1em;">
+                            <% for (let scope of scopes) { %>
+                                <li><%= scopeText[scope] %></li>
+                            <% } %>
+                        </ul>
+                    <% } %>
+                </form>
+                <form id="form" method="post">
+                    <h3 style="margin-top: 0">or sign up</h3>
+    
+                    <input type="hidden" name="type" value="signup">
+                    <input id="username" name="username" placeholder="Username" autocomplete="username"><br>
+                    <input type="password" id="password" name="password" placeholder="Password" autocomplete="current-password"><br><br>
+                    <input type="submit" value="Sign up">
+                </form>
+            </div>
         </div>
         <footer>
             <span>made with &lt;3</span>

@@ -75,15 +75,22 @@ router.post('/authorize',
             "#require": [
                 ["password", "password_sha3"]
             ],
+            type: {
+                required: true,
+                type: "string",
+                enum: ["signin", "signup"],
+            },
             username: {
                 required: true,
                 type: "string",
                 function: async (username, req) => {
-                    let user = await User.findOne({ username }).exec();
-                    if (!user) return "User not found"
+                    if (req.body.type == "signin") {
+                        let user = await User.findOne({ username }).exec();
+                        if (!user) return "User not found"
 
-                    if (!req.target) req.target = {};
-                    req.target.user = user;
+                        if (!req.target) req.target = {};
+                        req.target.user = user;
+                    }
                 }
             },
             password: {
@@ -96,8 +103,31 @@ router.post('/authorize',
     }),
     async (req, res) => {
         let hash_sha3 = req.body.password_sha3 || sha3(req.body.password);
-        let passwordMatches = await bcrypt.compare(hash_sha3, req.target.user.authentication.password.hash);
-        if (!passwordMatches) return res.status(400).json({error: "invalid_request", path: req.body.password ? "password" : "password_sha3", description: "Incorrect password"});
+
+        if (req.body.type == "signin") {
+            let passwordMatches = await bcrypt.compare(hash_sha3, req.target.user.authentication.password.hash);
+            if (!passwordMatches) return res.status(400).json({error: "invalid_request", path: req.body.password ? "password" : "password_sha3", description: "Incorrect password"});
+        } else {
+            let passwordHash = await bcrypt.hash(hash_sha3, 12);
+
+            if (!req.target) req.target = {};
+            try {
+                req.target.user = await (new User({
+                    username: req.body.username,
+                    authentication: {
+                        password: {
+                            hash: passwordHash
+                        }
+                    }
+                }).save());
+            } catch (e) {
+                if (e.constructor.name === 'MongoServerError' && e.code == 11000) {
+                    return res.status(400).json({error: "invalid_request", path: "username", reason: "Username taken"});
+                } else {
+                    throw e;
+                }
+            }
+        }
 
         let code = (await random.bytes(3 ** 3)).toString('base64url');
 
@@ -185,7 +215,7 @@ router.post('/token',
             user: codeObj.user,
             accessToken: sha3(access_token),
             refreshToken: refresh_token ? sha3(refresh_token) : undefined,
-            scopes: codeObj.scopes,
+            scopes,
             createdAt,
             expiresAt
         });
