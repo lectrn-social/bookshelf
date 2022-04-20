@@ -25,18 +25,46 @@ router.get('/user',
         if (isNaN(before) || !isFinite(before) || isNaN(new Date(before * 1000))) return res.status(400).json({ error: "invalid_before", error_description: "Invalid before. Must be a unix epoch integer measured in seconds." });
         if (!["public", "private"].includes(privacy)) return res.status(400).json({ error: "invalid_privacy", error_description: "Invalid privacy. Supported values: public private" });
 
+        let audience = "Public";
+
+        if (privacy == "private") {
+            if (req.target.user._id.toString() != req.auth.user.toString()) {
+                if ((await Follow.findOne({
+                    follower: req.auth.user,
+                    followed: req.target.user,
+                    pending: false
+                }).exec())) {
+                    audience = {
+                        $in: ["Public", "Followers"]
+                    };
+
+                    if ((await Follow.findOne({
+                        follower: req.target.user,
+                        followed: req.auth.user,
+                        pending: false
+                    }).exec())) {
+                        audience.$in.push("Mutuals");
+                    }
+                }
+            } else {
+                audience = undefined;
+            }
+        }
+
         before = new Date(before * 1000);
 
         let items = await Blip.find({
             createdAt: {$lt: before},
             owner: req.target.user,
-            ...(privacy == "public" ?
+            ...(audience ?
             {
-                audience: {
-                    audience:  "Public"
-                }
-            } : {})
-        }).sort({ createdAt: 'desc' }).limit(count).exec();
+                "audience.audience": audience,
+            } : {}),
+        })
+            .sort({ createdAt: 'desc' })
+            .limit(count)
+            .populate("owner")
+            .exec();
 
         res.status(200).json({
             items, // TODO: datafilter
@@ -68,7 +96,7 @@ router.get('/home',
             follower: req.target.user, pending: false
         }).exec())
             .map(x => x.followed);
-
+        
         let mutuals = (await Follow.find({
             following: req.target.user,
             follower: { $in: following },
@@ -83,30 +111,28 @@ router.get('/home',
                 owner: req.target.user,
                 ...(privacy == "public" ?
                 {
-                    audience: {
-                        audience:  "Public"
-                    }
-                } : {})
+                    "audience.audience": "Public",
+                } : {}),
             })
                 .sort({ createdAt: 'desc' })
                 .limit(count)
+                .populate('owner')
                 .exec(),
             
             // Public (+ follower) blips of followed users
             Blip.find({
                 createdAt: {$lt: before},
                 owner: {$in: following},
-                audience: {
-                    audience: {
-                        $in: [
-                            "Public",
-                            ...(privacy == "public" ? [] : ["Followers"]),
-                        ]
-                    }
-                }
+                "audience.audience": {
+                    $in: [
+                        "Public",
+                        ...(privacy == "public" ? [] : ["Followers"]),
+                    ],
+                },
             })
                 .sort({ createdAt: 'desc' })
                 .limit(count)
+                .populate('owner')
                 .exec(),
 
             // Mutual blips of mutuals
@@ -114,14 +140,13 @@ router.get('/home',
                 Blip.find({
                     createdAt: {$lt: before},
                     owner: {$in: mutuals},
-                    audience: {
-                        audience: "Mutuals"
-                    }
+                    "audience.audience": "Mutuals",
                 })
                     .sort({ createdAt: 'desc' })
                     .limit(count)
+                    .populate('owner')
                     .exec()
-            ])
+            ]),
         ])).flat(1);
 
         items.sort((a,b) => b.createdAt - a.createdAt);
